@@ -19,6 +19,7 @@ link_directories (
 add_executable (glTF ${glTF-src})
 target_link_libraries (
 	glTF
+	jsoncpp
 	${FBX_SDK_LIBRARY}
 	${Boost_LIBRARIES} ${Boost_FRAMEWORK}
 )

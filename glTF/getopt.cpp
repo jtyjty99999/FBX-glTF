@@ -47,6 +47,7 @@ EXPRESSLY ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
 #include <stdio.h>
 #ifdef __APPLE__
 #include <malloc/malloc.h>
+typedef int errno_t ;
 #else
 #include <malloc.h>
 #endif

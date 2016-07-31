@@ -18,6 +18,7 @@ link_directories (
 add_library (IO-glTF SHARED ${IO-glTF-src})
 target_link_libraries (
 	IO-glTF
+	jsoncpp
 	${FBX_SDK_LIBRARY}
 	${Boost_LIBRARIES} ${Boost_FRAMEWORK}
 )
