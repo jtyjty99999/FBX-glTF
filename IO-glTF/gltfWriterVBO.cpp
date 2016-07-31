@@ -184,8 +184,8 @@ void gltfwriterVBO::GetLayerElements (bool bInGeometry /*=true*/) {
 	//	FbxLayerElement::EType channel =static_cast<FbxLayerElement::EType>(index) ;
 	//	FbxLayerElementUV *pLayerElementUVs =elementUVs (channel, -1) ;
 	//	if ( pLayerElementUVs ) {
-	//		utility::string_t st (U("TEXCOORD_0")) ;
-	//		utility::string_t key =utility::conversions::to_string_t (FbxLayerElement::sTextureChannelNames [channel - FbxLayerElement::sTypeTextureStartIndex]) ;
+	//		std::string st (("TEXCOORD_0")) ;
+	//		std::string key =utility::conversions::to_string_t (FbxLayerElement::sTextureChannelNames [channel - FbxLayerElement::sTypeTextureStartIndex]) ;
 	//		_uvSets [key] =st ;
 	//	}
 	//}
@@ -202,13 +202,11 @@ void gltfwriterVBO::GetLayerElements (bool bInGeometry /*=true*/) {
 			FbxLayerElementUV *pLayerElementUVs =elementUVs (channel, iLayer) ;
 			channels [channel] =pLayerElementUVs ;
 			if ( pLayerElementUVs ) {
-				utility::string_t st (U("TEXCOORD_")) ;
+				std::string st (("TEXCOORD_")) ;
 				st +=utility::conversions::to_string_t ((int)_uvSets.size ()) ;
 				//FbxString name =pLayerElementUVs->GetName () ; // uvSet
 				//_uvSets [name == "" ? "default" : name] =utility::conversions::to_string_t (st.Buffer ()) ;
-				utility::string_t key =utility::conversions::to_string_t (
-					FbxLayerElement::sTextureChannelNames [channel - FbxLayerElement::sTypeTextureStartIndex]
-				) ;
+				std::string key = FbxLayerElement::sTextureChannelNames [channel - FbxLayerElement::sTypeTextureStartIndex] ;
 				_uvSets [key] =st ;
 			}
 		}
@@ -525,8 +523,8 @@ void gltfwriterVBOT<T>::GetLayerElements (bool bInGeometry /*=true*/) {
 	//	FbxLayerElement::EType channel =static_cast<FbxLayerElement::EType>(index) ;
 	//	FbxLayerElementUV *pLayerElementUVs =elementUVs (channel, -1) ;
 	//	if ( pLayerElementUVs ) {
-	//		utility::string_t st (U("TEXCOORD_0")) ;
-	//		utility::string_t key =utility::conversions::to_string_t (FbxLayerElement::sTextureChannelNames [channel - FbxLayerElement::sTypeTextureStartIndex]) ;
+	//		std::string st (("TEXCOORD_0")) ;
+	//		std::string key =utility::conversions::to_string_t (FbxLayerElement::sTextureChannelNames [channel - FbxLayerElement::sTypeTextureStartIndex]) ;
 	//		_uvSets [key] =st ;
 	//	}
 	//}
@@ -543,11 +541,11 @@ void gltfwriterVBOT<T>::GetLayerElements (bool bInGeometry /*=true*/) {
 			FbxLayerElementUV *pLayerElementUVs =elementUVs (channel, iLayer) ;
 			channels [channel] =pLayerElementUVs ;
 			if ( pLayerElementUVs ) {
-				utility::string_t st (U("TEXCOORD_")) ;
+				std::string st (("TEXCOORD_")) ;
 				st +=utility::conversions::to_string_t ((int)_uvSets.size ()) ;
 				//FbxString name =pLayerElementUVs->GetName () ; // uvSet
 				//_uvSets [name == "" ? "default" : name] =utility::conversions::to_string_t (st.Buffer ()) ;
-				utility::string_t key =utility::conversions::to_string_t (
+				std::string key =utility::conversions::to_string_t (
 					FbxLayerElement::sTextureChannelNames [channel - FbxLayerElement::sTypeTextureStartIndex]
 				) ;
 				_uvSets [key] =st ;

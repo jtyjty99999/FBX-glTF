@@ -26,9 +26,10 @@ namespace _IOglTF_NS_ {
 bool gltfWriter::WriteScene (FbxScene *pScene, int poseIndex /*=-1*/) {
 	FbxNode *pRoot =pScene->GetRootNode () ;
 	FbxPose *pPose =poseIndex >= 0 ? pScene->GetPose (poseIndex) : nullptr ;
-	utility::string_t szName =utility::conversions::to_string_t (pScene->GetName ()) ;
-	_json [U("scene")] =web::json::value::string (szName) ;
-	_json [U("scenes")] =web::json::value::object ({ { szName, web::json::value::object ({ { U("nodes"), web::json::value::array () } }) } }) ;
+	std::string szName = (pScene->GetName ()) ;
+	_json [("scene")] =(szName) ;
+	auto &scenes = _json [("scenes")];
+	scenes[szName]["nodes"] = Json::Value( Json::arrayValue ) ;
 
 	//FbxDouble3 translation =pRoot->LclTranslation.Get () ;
 	//FbxDouble3 rotation =pRoot->LclRotation.Get () ;

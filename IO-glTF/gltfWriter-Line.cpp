@@ -77,29 +77,29 @@ FbxArray<FbxVector4> GetVertexPositions (FbxLine *pLine, bool bInGeometry =true,
 }
 
 //-----------------------------------------------------------------------------
-web::json::value gltfWriter::WriteLine (FbxNode *pNode) {
+Json::Value gltfWriter::WriteLine (FbxNode *pNode) {
 #ifdef GG
-	web::json::value lineDef =web::json::value::object () ;
-	lineDef [U("name")] =web::json::value::string (nodeId (pNode, true)) ;
+	Json::Value lineDef  ;
+	lineDef [("name")] =(nodeId (pNode, true)) ;
 
 	if ( isKnownId (pNode->GetNodeAttribute ()->GetUniqueID ()) ) {
 		// The line/material/... were already exported, create only the transform node
-		web::json::value node =WriteNode (pNode) ;
-		web::json::value ret =web::json::value::object ({ { U("nodes"), node } }) ;
+		Json::Value node =WriteNode (pNode) ;
+		Json::Value ret =Json::Value::object ({ { ("nodes"), node } }) ;
 		return (ret) ;
 	}
 
-	web::json::value linePrimitives =web::json::value::array () ;
-	web::json::value accessorsAndBufferViews =web::json::value::object ({
-		{ U("accessors"), web::json::value::object () },
-		{ U("bufferViews"), web::json::value::object () }
+	Json::Value linePrimitives =Json::Value::array () ;
+	Json::Value accessorsAndBufferViews =Json::Value::object ({
+		{ ("accessors"), Json::Value::object () },
+		{ ("bufferViews"), Json::Value::object () }
 	}) ;
-	web::json::value materials =web::json::value::object ({ { U("materials"), web::json::value::object () } }) ;
-	web::json::value techniques =web::json::value::object ({ { U("techniques"), web::json::value::object () } }) ;
-	web::json::value programs =web::json::value::object ({ { U("programs"), web::json::value::object () } }) ;
-	web::json::value images =web::json::value::object ({ { U("images"), web::json::value::object () } }) ;
-	web::json::value samplers =web::json::value::object ({ { U("samplers"), web::json::value::object () } }) ;
-	web::json::value textures =web::json::value::object ({ { U("textures"), web::json::value::object () } }) ;
+	Json::Value materials =Json::Value::object ({ { ("materials"), Json::Value::object () } }) ;
+	Json::Value techniques =Json::Value::object ({ { ("techniques"), Json::Value::object () } }) ;
+	Json::Value programs =Json::Value::object ({ { ("programs"), Json::Value::object () } }) ;
+	Json::Value images =Json::Value::object ({ { ("images"), Json::Value::object () } }) ;
+	Json::Value samplers =Json::Value::object ({ { ("samplers"), Json::Value::object () } }) ;
+	Json::Value textures =Json::Value::object ({ { ("textures"), Json::Value::object () } }) ;
 
 	FbxLine *pLine =pNode->GetLine () ; //FbxCast<FbxLine>(pNode->GetNodeAttribute ()) ;
 	pLine->ComputeBBox () ;
@@ -119,12 +119,12 @@ web::json::value gltfWriter::WriteLine (FbxNode *pNode) {
 	// - Warnings for unsupported layer element types: polygon groups, undefined
 
 	int nbLayers =pLine->GetLayerCount () ;
-	web::json::value primitive=web::json::value::object ({
-		{ U("attributes"), web::json::value::object () },
-		{ U("mode"), IOglTF::LINES } // Allowed values are 0 (POINTS), 1 (LINES), 2 (LINE_LOOP), 3 (LINE_STRIP), 4 (TRIANGLES), 5 (TRIANGLE_STRIP), and 6 (TRIANGLE_FAN).
+	Json::Value primitive=Json::Value::object ({
+		{ ("attributes"), Json::Value::object () },
+		{ ("mode"), IOglTF::LINES } // Allowed values are 0 (POINTS), 1 (LINES), 2 (LINE_LOOP), 3 (LINE_STRIP), 4 (TRIANGLES), 5 (TRIANGLE_STRIP), and 6 (TRIANGLE_FAN).
 	}) ;
 
-	web::json::value localAccessorsAndBufferViews =web::json::value::object () ;
+	Json::Value localAccessorsAndBufferViews  ;
 
 	int deformerCount =pLine->GetDeformerCount (FbxDeformer::eSkin) ;
 	_ASSERTE (deformerCount <= 1) ; // "Unexpected number of skin greater than 1") ;
@@ -136,13 +136,13 @@ web::json::value gltfWriter::WriteLine (FbxNode *pNode) {
 
 //	std::vector<FbxDouble3> out_positions =vbo.getPositions () ;
 
-	web::json::value vertex =WriteArrayWithMinMax<FbxDouble3, float> (out_positions, pLine->GetNode (), U("_Positions")) ;
+	Json::Value vertex =WriteArrayWithMinMax<FbxDouble3, float> (out_positions, pLine->GetNode (), ("_Positions")) ;
 	MergeJsonObjects (localAccessorsAndBufferViews, vertex);
-	primitive [U("attributes")] [U("POSITION")] =web::json::value::string (GetJsonFirstKey (vertex [U("accessors")])) ;
+	primitive [("attributes")] [("POSITION")] =(GetJsonFirstKey (vertex [("accessors")])) ;
 
 	// Get line face indices
-	web::json::value polygons =WriteArray<unsigned short> (out_indices, 1, pLine->GetNode (), U("_Polygons")) ;
-	primitive [U("indices")] =web::json::value::string (GetJsonFirstKey (polygons [U("accessors")])) ;
+	Json::Value polygons =WriteArray<unsigned short> (out_indices, 1, pLine->GetNode (), ("_Polygons")) ;
+	primitive [("indices")] =(GetJsonFirstKey (polygons [("accessors")])) ;
 
 	MergeJsonObjects (accessorsAndBufferViews, polygons) ;
 	MergeJsonObjects (accessorsAndBufferViews, localAccessorsAndBufferViews) ;
@@ -150,30 +150,30 @@ web::json::value gltfWriter::WriteLine (FbxNode *pNode) {
 	// Get material
 	FbxLayer *pLayer =gltfwriterVBO::getLayer (pLine, FbxLayerElement::eMaterial) ;
 	if ( pLayer == nullptr ) {
-		//ucout << U("Info: (") << utility::conversions::to_string_t (pNode->GetTypeName ())
-		//	<< U(") ") << utility::conversions::to_string_t (pNode->GetName ())
-		//	<< U(" no material on Layer: ")
+		//std::cout << ("Info: (") << utility::conversions::to_string_t (pNode->GetTypeName ())
+		//	<< (") ") << utility::conversions::to_string_t (pNode->GetName ())
+		//	<< (" no material on Layer: ")
 		//	<< iLayer
 		//	<< std::endl ;
 		// Create default material
-		web::json::value ret =WriteDefaultMaterial (pNode) ;
+		Json::Value ret =WriteDefaultMaterial (pNode) ;
 		if ( ret.is_string () ) {
-			primitive [U("material")] =ret ;
+			primitive [("material")] =ret ;
 		} else {
-			primitive [U("material")]=web::json::value::string (GetJsonFirstKey (ret [U("materials")])) ;
+			primitive [("material")]=(GetJsonFirstKey (ret [("materials")])) ;
 
-			MergeJsonObjects (materials [U("materials")], ret [U("materials")]) ;
+			MergeJsonObjects (materials [("materials")], ret [("materials")]) ;
 
-			utility::string_t techniqueName =GetJsonFirstKey (ret [U("techniques")]) ;
-			web::json::value techniqueParameters =ret [U("techniques")] [techniqueName] [U("parameters")] ;
+			std::string techniqueName =GetJsonFirstKey (ret [("techniques")]) ;
+			Json::Value techniqueParameters =ret [("techniques")] [techniqueName] [("parameters")] ;
 			AdditionalTechniqueParameters (pNode, techniqueParameters, out_normals.size () != 0) ;
-			TechniqueParameters (pNode, techniqueParameters, primitive [U("attributes")], localAccessorsAndBufferViews [U("accessors")], false) ;
+			TechniqueParameters (pNode, techniqueParameters, primitive [("attributes")], localAccessorsAndBufferViews [("accessors")], false) ;
 			ret =WriteTechnique (pNode, nullptr, techniqueParameters) ;
 			//MergeJsonObjects (techniques, ret) ;
-			techniques [U("techniques")] [techniqueName] =ret ;
+			techniques [("techniques")] [techniqueName] =ret ;
 
-			utility::string_t programName =ret [U("program")].as_string () ;
-			web::json::value attributes =ret [U("attributes")] ;
+			std::string programName =ret [("program")].asString () ;
+			Json::Value attributes =ret [("attributes")] ;
 			ret =WriteProgram (pNode, nullptr, programName, attributes) ;
 			MergeJsonObjects (programs, ret) ;
 		}
@@ -182,53 +182,53 @@ web::json::value gltfWriter::WriteLine (FbxNode *pNode) {
 		int materialCount =pLayerElementMaterial ? pNode->GetMaterialCount () : 0 ;
 		if ( materialCount > 1 ) {
 			_ASSERTE( materialCount > 1 ) ;
-			ucout << U("Warning: (") << utility::conversions::to_string_t (pNode->GetTypeName ())
-				<< U(") ") << utility::conversions::to_string_t (pNode->GetName ())
-				<< U(" got more than one material. glTF supports one material per primitive (FBX Layer).")
+			std::cout << ("Warning: (") << utility::conversions::to_string_t (pNode->GetTypeName ())
+				<< (") ") << utility::conversions::to_string_t (pNode->GetName ())
+				<< (" got more than one material. glTF supports one material per primitive (FBX Layer).")
 				<< std::endl ;
 		}
 		// TODO: need to be revisited when glTF will support more than one material per layer/primitive
 		materialCount =materialCount == 0 ? 0 : 1 ;
 		for ( int i =0 ; i < materialCount ; i++ ) {
-			web::json::value ret =WriteMaterial (pNode, pNode->GetMaterial (i)) ;
+			Json::Value ret =WriteMaterial (pNode, pNode->GetMaterial (i)) ;
 			if ( ret.is_string () ) {
-				primitive [U("material")] =ret ;
+				primitive [("material")] =ret ;
 				continue ;
 			}
-			primitive [U("material")]=web::json::value::string (GetJsonFirstKey (ret [U("materials")])) ;
+			primitive [("material")]=(GetJsonFirstKey (ret [("materials")])) ;
 
-			MergeJsonObjects (materials [U("materials")], ret [U("materials")]) ;
-			if ( ret.has_field (U("images")) )
-				MergeJsonObjects (images [U("images")], ret [U("images")]) ;
-			if ( ret.has_field (U("samplers")) )
-				MergeJsonObjects (samplers [U("samplers")], ret [U("samplers")]) ;
-			if ( ret.has_field (U("textures")) )
-				MergeJsonObjects (textures [U("textures")], ret [U("textures")]) ;
+			MergeJsonObjects (materials [("materials")], ret [("materials")]) ;
+			if ( ret.isMember (("images")) )
+				MergeJsonObjects (images [("images")], ret [("images")]) ;
+			if ( ret.isMember (("samplers")) )
+				MergeJsonObjects (samplers [("samplers")], ret [("samplers")]) ;
+			if ( ret.isMember (("textures")) )
+				MergeJsonObjects (textures [("textures")], ret [("textures")]) ;
 
-			utility::string_t techniqueName =GetJsonFirstKey (ret [U("techniques")]) ;
-			web::json::value techniqueParameters =ret [U("techniques")] [techniqueName] [U("parameters")] ;
+			std::string techniqueName =GetJsonFirstKey (ret [("techniques")]) ;
+			Json::Value techniqueParameters =ret [("techniques")] [techniqueName] [("parameters")] ;
 			AdditionalTechniqueParameters (pNode, techniqueParameters, out_normals.size () != 0) ;
-			TechniqueParameters (pNode, techniqueParameters, primitive [U("attributes")], localAccessorsAndBufferViews [U("accessors")]) ;
+			TechniqueParameters (pNode, techniqueParameters, primitive [("attributes")], localAccessorsAndBufferViews [("accessors")]) ;
 			ret =WriteTechnique (pNode, pNode->GetMaterial (i), techniqueParameters) ;
 			//MergeJsonObjects (techniques, ret) ;
-			techniques [U("techniques")] [techniqueName] =ret ;
+			techniques [("techniques")] [techniqueName] =ret ;
 
-			utility::string_t programName =ret [U("program")].as_string () ;
-			web::json::value attributes =ret [U("attributes")] ;
+			std::string programName =ret [("program")].asString () ;
+			Json::Value attributes =ret [("attributes")] ;
 			ret =WriteProgram (pNode, pNode->GetMaterial (i), programName, attributes) ;
 			MergeJsonObjects (programs, ret) ;
 		}
 	}
 	linePrimitives [linePrimitives.size ()] =primitive ;
-	lineDef [U("primitives")] =linePrimitives ;
+	lineDef [("primitives")] =linePrimitives ;
 
-	web::json::value lib =web::json::value::object ({ { nodeId (pNode, true, true), lineDef } }) ;
+	Json::Value lib =Json::Value::object ({ { nodeId (pNode, true, true), lineDef } }) ;
 
-	web::json::value node =WriteNode (pNode) ;
+	Json::Value node =WriteNode (pNode) ;
 	//if ( pLine->GetShapeCount () )
 	//	WriteControllerShape (pLine) ; // Create a controller
 
-	web::json::value ret =web::json::value::object ({ { U("meshes"), lib }, { U("nodes"), node } }) ;
+	Json::Value ret =Json::Value::object ({ { ("meshes"), lib }, { ("nodes"), node } }) ;
 	MergeJsonObjects (ret, accessorsAndBufferViews) ;
 	MergeJsonObjects (ret, images) ;
 	MergeJsonObjects (ret, materials) ;
@@ -238,7 +238,7 @@ web::json::value gltfWriter::WriteLine (FbxNode *pNode) {
 	MergeJsonObjects (ret, textures) ;
 	return (ret) ;
 #else
-	return (web::json::value::null ()) ;
+	return (Json::Value::null ()) ;
 #endif
 }
 #endif

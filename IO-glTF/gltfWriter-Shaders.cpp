@@ -25,74 +25,74 @@
 namespace _IOglTF_NS_ {
 
 bool gltfWriter::WriteShaders () {
-	//web::json::value buffer =web::json::value::object () ;
+	//Json::Value buffer  ;
 	//FbxString filename =FbxPathUtils::GetFileName (utility::conversions::to_utf8string (_fileName).c_str (), false) ;
-	//buffer [U("name")] =web::json::value::string (utility::conversions::to_string_t (filename.Buffer ())) ;
+	//buffer [("name")] =(utility::conversions::to_string_t (filename.Buffer ())) ;
 
-	//buffer [U("uri")] =web::json::value::string (utility::conversions::to_string_t ((filename + ".bin").Buffer ())) ;
+	//buffer [("uri")] =(utility::conversions::to_string_t ((filename + ".bin").Buffer ())) ;
 	//// The Buffer file should be fully completed by now.
 	//if ( GetIOSettings ()->GetBoolProp (IOSN_FBX_GLTF_EMBEDMEDIA, false) ) {
 	//	// data:[<mime type>][;charset=<charset>][;base64],<encoded data>
-	//	buffer [U("uri")] =web::json::value::string (IOglTF::dataURI (_bin)) ;
+	//	buffer [("uri")] =(IOglTF::dataURI (_bin)) ;
 	//}
 
 	//if ( _writeDefaults )
-	//	buffer [U("type")] =web::json::value::string (U("arraybuffer")) ; ; // default is arraybuffer
-	//buffer [U("byteLength")] =web::json::value::number ((int)_bin.tellg ()) ;
+	//	buffer [("type")] =(("arraybuffer")) ; ; // default is arraybuffer
+	//buffer [("byteLength")] =((int)_bin.tellg ()) ;
 
-	//_json [U("buffers")] [utility::conversions::to_string_t (filename.Buffer ())] =buffer ;
+	//_json [("buffers")] [utility::conversions::to_string_t (filename.Buffer ())] =buffer ;
 
-	//web::json::value techs =_json [U("techniques")] ;
+	//Json::Value techs =_json [("techniques")] ;
 	//for ( auto iter =techs.as_object ().begin () ; iter != techs.as_object ().end () ; iter++ ) {
 	//	glslTech test (iter->second) ;
 
-	//	ucout << test.vertexShader ().source ()
+	//	std::cout << test.vertexShader ().source ()
 	//		<< std::endl ;
 	//}
 
 
-	web::json::value materials =_json [U("materials")] ;
-	for ( auto iter =materials.as_object ().begin () ; iter != materials.as_object ().end () ; iter++ ) {
-		utility::string_t name =iter->first ;
-		utility::string_t techniqueName =iter->second [U("technique")].as_string () ;
+	Json::Value materials =_json [("materials")] ;
+	auto memberNames = materials.getMemberNames();
+	for ( auto &name : memberNames ) {
+		std::string techniqueName = materials[name] [("technique")].asString () ;
 		glslTech tech (
-			_json [U("techniques")] [techniqueName],
-			iter->second [U("values")],
+			_json [("techniques")] [techniqueName],
+			materials[name] [("values")],
 			_json
 		) ;
 
-		utility::string_t programName =_json [U("techniques")] [techniqueName] [U("program")].as_string () ;
-		utility::string_t vsName =_json [U("programs")] [programName] [U("vertexShader")].as_string () ;
-		utility::string_t fsName =_json [U("programs")] [programName] [U("fragmentShader")].as_string () ;
+		std::string programName =_json [("techniques")] [techniqueName] [("program")].asString () ;
+		std::string vsName =_json [("programs")] [programName] [("vertexShader")].asString () ;
+		std::string fsName =_json [("programs")] [programName] [("fragmentShader")].asString () ;
 		
 		if ( GetIOSettings ()->GetBoolProp (IOSN_FBX_GLTF_EMBEDMEDIA, false) ) {
 			// data:[<mime type>][;charset=<charset>][;base64],<encoded data>
-			_json [U("shaders")] [vsName] [U("uri")] =web::json::value::string (IOglTF::dataURI (tech.vertexShader ().source ())) ;
-			_json [U("shaders")] [fsName] [U("uri")] =web::json::value::string (IOglTF::dataURI (tech.fragmentShader ().source ())) ;
+			_json [("shaders")] [vsName] [("uri")] =(IOglTF::dataURI (tech.vertexShader ().source ())) ;
+			_json [("shaders")] [fsName] [("uri")] =(IOglTF::dataURI (tech.fragmentShader ().source ())) ;
 		} else {
-			FbxString gltfFilename (utility::conversions::to_utf8string (_fileName).c_str ()) ;
-			utility::string_t vsFilename =_json [U("shaders")] [vsName] [U("uri")].as_string () ;
+			FbxString gltfFilename ((_fileName).c_str ()) ;
+			std::string vsFilename =_json [("shaders")] [vsName] [("uri")].asString () ;
 			{
-				FbxString shaderFilename (utility::conversions::to_utf8string (vsFilename).c_str ()) ;
+				FbxString shaderFilename ((vsFilename).c_str ()) ;
 #if defined(_WIN32) || defined(_WIN64)
 				shaderFilename =FbxPathUtils::GetFolderName (gltfFilename) + "\\" + shaderFilename ;
 #else
-				shaderFilename =FbxPathUtils::GetFolderName (fileName) + "/" + shaderFilename ;
+				shaderFilename =FbxPathUtils::GetFolderName (vsFilename.c_str()) + "/" + shaderFilename ;
 #endif
-				std::wfstream shaderFile (shaderFilename, std::ios::out | std::ofstream::binary) ;
+				std::fstream shaderFile (shaderFilename, std::ios::out | std::ofstream::binary) ;
 				//_bin.seekg (0, std::ios_base::beg) ;
 				shaderFile.write (tech.vertexShader ().source ().c_str (), tech.vertexShader ().source ().length ()) ;
 				shaderFile.close () ;
 			}
-			utility::string_t fsFileame =_json [U("shaders")] [fsName] [U("uri")].as_string () ;
+			std::string fsFilename =_json [("shaders")] [fsName] [("uri")].asString () ;
 			{
-				FbxString shaderFilename (utility::conversions::to_utf8string (fsFileame).c_str ()) ;
+				FbxString shaderFilename ((fsFilename).c_str ()) ;
 #if defined(_WIN32) || defined(_WIN64)
 				shaderFilename =FbxPathUtils::GetFolderName (gltfFilename) + "\\" + shaderFilename ;
 #else
-				shaderFilename =FbxPathUtils::GetFolderName (fileName) + "/" + shaderFilename ;
+				shaderFilename =FbxPathUtils::GetFolderName (fsFilename.c_str()) + "/" + shaderFilename ;
 #endif
-				std::wfstream shaderFile (shaderFilename, std::ios::out | std::ofstream::binary) ;
+				std::fstream shaderFile (shaderFilename, std::ios::out | std::ofstream::binary) ;
 				//_bin.seekg (0, std::ios_base::beg) ;
 				shaderFile.write (tech.fragmentShader ().source ().c_str (), tech.fragmentShader ().source ().length ()) ;
 				shaderFile.close () ;

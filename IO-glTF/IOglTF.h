@@ -20,6 +20,8 @@
 //
 #pragma once
 
+#include <iostream>
+
 namespace _IOglTF_NS_ {
 
 void *_gltfFormatInfo (FbxWriter::EInfoRequest pRequest, int pId) ;
@@ -62,23 +64,23 @@ public:
 	static const unsigned int FRAGMENT_SHADER =35632 ;
 	static const unsigned int VERTEX_SHADER =35633 ;
 	// accessor::type (https://github.com/KhronosGroup/glTF/blob/master/specification/accessor.schema.json)
-	static const utility::char_t *szSCALAR ;
-	static const utility::char_t *szFLOAT ;
-	static const utility::char_t *szVEC2 ;
-	static const utility::char_t *szVEC3 ;
-	static const utility::char_t *szVEC4 ;
-	static const utility::char_t *szINT ;
-	static const utility::char_t *szIVEC2 ;
-	static const utility::char_t *szIVEC3 ;
-	static const utility::char_t *szIVEC4 ;
-	static const utility::char_t *szBOOL ;
-	static const utility::char_t *szBVEC2 ;
-	static const utility::char_t *szBVEC3 ;
-	static const utility::char_t *szBVEC4 ;
-	static const utility::char_t *szMAT2 ;
-	static const utility::char_t *szMAT3 ;
-	static const utility::char_t *szMAT4 ;
-	static const utility::char_t *szSAMPLER_2D ;
+	static const char *szSCALAR ;
+	static const char *szFLOAT ;
+	static const char *szVEC2 ;
+	static const char *szVEC3 ;
+	static const char *szVEC4 ;
+	static const char *szINT ;
+	static const char *szIVEC2 ;
+	static const char *szIVEC3 ;
+	static const char *szIVEC4 ;
+	static const char *szBOOL ;
+	static const char *szBVEC2 ;
+	static const char *szBVEC3 ;
+	static const char *szBVEC4 ;
+	static const char *szMAT2 ;
+	static const char *szMAT3 ;
+	static const char *szMAT4 ;
+	static const char *szSAMPLER_2D ;
 	// bufferView::Target (https://github.com/KhronosGroup/glTF/blob/master/specification/bufferView.schema.json)
 	static const unsigned int ARRAY_BUFFER =34962 ;
 	static const unsigned int ELEMENT_ARRAY_BUFFER =34963 ;
@@ -118,9 +120,9 @@ public:
 	static const unsigned int REPEAT =10497 ;
 
 	//
-	static const web::json::value Identity2 ;
-	static const web::json::value Identity3 ;
-	static const web::json::value Identity4 ;
+	static const Json::Value Identity2 ;
+	static const Json::Value Identity3 ;
+	static const Json::Value Identity4 ;
 
 protected:
 	explicit IOglTF (const FbxPluginDef &pDefinition, FbxModule pLibHandle) : FbxPlugin (pDefinition, pLibHandle) {
@@ -134,14 +136,14 @@ public:
 	template<class T>
 	static unsigned int accessorComponentType () ;
 	template<class T>
-	static const utility::char_t *accessorType (int size, int dim =1) ;
-	static unsigned int techniqueParameters (const utility::char_t *szType, int compType =FLOAT) ;
-	static const utility::char_t *glslAccessorType (unsigned int glType) ;
-	static const utility::string_t glslShaderType (unsigned int glType) ;
-	static const utility::char_t *mimeType (const utility::char_t *szFilename) ;
+	static const char *accessorType (int size, int dim =1) ;
+	static unsigned int techniqueParameters (const char *szType, int compType =FLOAT) ;
+	static const char *glslAccessorType (unsigned int glType) ;
+	static const std::string glslShaderType (unsigned int glType) ;
+	static const char *mimeType (const char *szFilename) ;
 	// Online uri generator: http://bran.name/dump/data-uri-generator/
-	static const utility::string_t dataURI (const utility::string_t fileName) ;
-	static const utility::string_t dataURI (memoryStream<uint8_t> &stream) ;
+	static const std::string dataURI (const std::string fileName) ;
+	static const std::string dataURI (memoryStream<uint8_t> &stream) ;
 
 } ;
 
@@ -168,23 +170,23 @@ template<class T>
 	if ( tp == iFloat ) return (FLOAT) ;
 	if ( tp == iBool ) return (BOOL) ;
 		
-	ucout << U("IOglTF::accessorComponentType() / hash code: ") << std::hex << typeid (T).hash_code () << std::endl ;
-	ucout << U("char: ") << std::hex << typeid (char).hash_code () << std::endl ;
-	ucout << U("int8_t: ") << std::hex << typeid (int8_t).hash_code () << std::endl ;
-	ucout << U("unsigned char: ") << std::hex << typeid (unsigned char).hash_code () << std::endl ;
-	ucout << U("uint8_t: ") << std::hex << typeid (uint8_t).hash_code () << std::endl ;
-	ucout << U("short: ") << std::hex << typeid (short).hash_code () << std::endl ;
-	ucout << U("unsigned short: ") << std::hex << typeid (unsigned short).hash_code () << std::endl ;
-	ucout << U("int: ") << std::hex << typeid (int).hash_code () << std::endl ;
-	ucout << U("unsigned int: ") << std::hex << typeid (unsigned int).hash_code () << std::endl ;
-	ucout << U("float: ") << std::hex << typeid (float).hash_code () << std::endl ;
-	ucout << U("bool: ") << std::hex << typeid (bool).hash_code () << std::endl ;
+	std::cout << ("IOglTF::accessorComponentType() / hash code: ") << std::hex << typeid (T).hash_code () << std::endl ;
+	std::cout << ("char: ") << std::hex << typeid (char).hash_code () << std::endl ;
+	std::cout << ("int8_t: ") << std::hex << typeid (int8_t).hash_code () << std::endl ;
+	std::cout << ("unsigned char: ") << std::hex << typeid (unsigned char).hash_code () << std::endl ;
+	std::cout << ("uint8_t: ") << std::hex << typeid (uint8_t).hash_code () << std::endl ;
+	std::cout << ("short: ") << std::hex << typeid (short).hash_code () << std::endl ;
+	std::cout << ("unsigned short: ") << std::hex << typeid (unsigned short).hash_code () << std::endl ;
+	std::cout << ("int: ") << std::hex << typeid (int).hash_code () << std::endl ;
+	std::cout << ("unsigned int: ") << std::hex << typeid (unsigned int).hash_code () << std::endl ;
+	std::cout << ("float: ") << std::hex << typeid (float).hash_code () << std::endl ;
+	std::cout << ("bool: ") << std::hex << typeid (bool).hash_code () << std::endl ;
 	_ASSERTE( false ) ;
 	return (0) ;
 }
 	
 template<class T>
-/*static*/ const utility::char_t *IOglTF::accessorType (int size, int dim) {
+/*static*/ const char *IOglTF::accessorType (int size, int dim) {
 	if ( dim == 1 ) {
 		int type =IOglTF::accessorComponentType<T> () ;
 		switch ( size ) {
@@ -201,7 +203,7 @@ template<class T>
 		}
 	}
 	_ASSERTE( false ) ;
-	return (U("")) ;
+	return (("")) ;
 }
 
 }

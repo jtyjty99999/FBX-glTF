@@ -21,12 +21,13 @@
 #include "StdAfx.h"
 #include "glTF.h"
 #include "gltfPackage.h"
+#include <cassert>
 
 //-----------------------------------------------------------------------------
 /*static*/ FbxAutoPtr<fbxSdkMgr> fbxSdkMgr::_singleton ;
 
 fbxSdkMgr::fbxSdkMgr () : _sdkManager(FbxManager::Create ()) {
-	_ASSERTE( _sdkManager ) ;
+	assert( _sdkManager ) ;
 	FbxIOSettings *pIOSettings =FbxIOSettings::Create (_sdkManager, IOSROOT) ;
 	//pIOSettings->SetBoolProp (IMP_FBX_CONSTRAINT, true) ;
 	//pIOSettings->SetBoolProp (IMP_FBX_CONSTRAINT_COUNT, true) ;
@@ -64,19 +65,19 @@ fbxSdkMgr::~fbxSdkMgr () {
 }
 
 FbxSharedDestroyPtr<FbxManager> &fbxSdkMgr::fbxMgr () {
-	_ASSERTE( _sdkManager ) ;
+	assert( _sdkManager ) ;
 	return (_sdkManager) ;
 }
 
 //-----------------------------------------------------------------------------
-gltfPackage::gltfPackage () : _scene(nullptr), _ioSettings ({ U("") }) {
+gltfPackage::gltfPackage () : _scene(nullptr), _ioSettings ({ ("") }) {
 }
 
 gltfPackage::~gltfPackage () {
 }
 
 void gltfPackage::ioSettings (
-	const utility::char_t *name /*=nullptr*/,
+	const char *name /*=nullptr*/,
 	bool angleInDegree /*=false*/,
 	bool invertTransparency /*=false*/,
 	bool defaultLighting /*=false*/,
@@ -84,7 +85,7 @@ void gltfPackage::ioSettings (
 	bool embedMedia /*=false*/
 ) {
 	FbxIOSettings *pIOSettings =fbxSdkMgr::Instance ()->fbxMgr ()->GetIOSettings () ;
-	_ioSettings._name =name == nullptr ? U("") : name ;
+	_ioSettings._name =name == nullptr ? ("") : name ;
 	pIOSettings->SetBoolProp (IOSN_FBX_GLTF_ANGLEINDEGREE, angleInDegree) ;
 	pIOSettings->SetBoolProp (IOSN_FBX_GLTF_INVERTTRANSPARENCY, invertTransparency) ;
 	pIOSettings->SetBoolProp (IOSN_FBX_GLTF_DEFAULTLIGHTING, defaultLighting) ;
@@ -93,36 +94,36 @@ void gltfPackage::ioSettings (
 	//fbxSdkMgr::Instance ()->fbxMgr ()->SetIOSettings (pIOSettings) ;
 }
 
-bool gltfPackage::load (const utility::string_t &fn) {
-	_ASSERTE( !_scene ) ;
+bool gltfPackage::load (const std::string &fn) {
+	assert( !_scene ) ;
 	auto pMgr =fbxSdkMgr::Instance ()->fbxMgr () ;
-	_scene.Reset (FbxScene::Create (pMgr, utility::conversions::to_utf8string (gltfPackage::filename (fn)).c_str ())) ;
-	_ASSERTE( !!_scene ) ;
+	_scene.Reset (FbxScene::Create (pMgr, (gltfPackage::filename (fn)).c_str ())) ;
+	assert( !!_scene ) ;
 	bool bRet =LoadScene (fn) ;
 	return (bRet) ;
 }
 
-bool gltfPackage::import (const utility::string_t &fn) {
-	_ASSERTE( !_scene ) ;
+bool gltfPackage::import (const std::string &fn) {
+	assert( !_scene ) ;
 	auto pMgr =fbxSdkMgr::Instance ()->fbxMgr () ;
-	_scene.Reset (FbxScene::Create (pMgr, utility::conversions::to_utf8string (gltfPackage::filename (fn)).c_str ())) ;
-	_ASSERTE( !!_scene ) ;
+	_scene.Reset (FbxScene::Create (pMgr, (gltfPackage::filename (fn)).c_str ())) ;
+	assert( !!_scene ) ;
 	bool bRet =LoadScene (fn) ;
 	return (bRet) ;
 }
 
-bool gltfPackage::save (const utility::string_t &outdir) {
-	_ASSERTE( !!_scene ) ;
+bool gltfPackage::save (const std::string &outdir) {
+	assert( !!_scene ) ;
 	bool bRet =WriteScene (outdir) ;
 	return (bRet) ;
 }
 
-/*static*/ utility::string_t gltfPackage::filename (const utility::string_t &path) {
-	utility::string_t filename ;
-	size_t pos =path.find_last_of (U("/\\")) ;
-	if ( pos != utility::string_t::npos ) {
-		size_t pos2 =path.find (U("."), pos) ;
-		if ( pos2 != utility::string_t::npos )
+/*static*/ std::string gltfPackage::filename (const std::string &path) {
+	std::string filename ;
+	size_t pos =path.find_last_of (("/\\")) ;
+	if ( pos != std::string::npos ) {
+		size_t pos2 =path.find (("."), pos) ;
+		if ( pos2 != std::string::npos )
 			filename.assign (path.begin () + pos + 1, path.begin () + pos2) ;
 		else
 			filename.assign (path.begin () + pos + 1, path.end ()) ;
@@ -132,21 +133,21 @@ bool gltfPackage::save (const utility::string_t &outdir) {
 	return (filename) ;
 }
 
-/*static*/ utility::string_t gltfPackage::pathname (const utility::string_t &filename) {
-	utility::string_t path ;
-	size_t pos =filename.find_last_of (U ("/\\")) ;
-	if ( pos != utility::string_t::npos )
+/*static*/ std::string gltfPackage::pathname (const std::string &filename) {
+	std::string path ;
+	size_t pos =filename.find_last_of (("/\\")) ;
+	if ( pos != std::string::npos )
 		path.assign (filename.begin (), filename.begin () + pos + 1) ;
 	else
-		path =U("") ;
+		path =("") ;
 	return (path) ;
 }
 
-bool gltfPackage::LoadScene (const utility::string_t &fn) {
+bool gltfPackage::LoadScene (const std::string &fn) {
 	auto pMgr =fbxSdkMgr::Instance ()->fbxMgr () ;
 	FbxAutoDestroyPtr<FbxImporter> pImporter (FbxImporter::Create (pMgr, "")) ;
 
-	if ( !pImporter->Initialize (utility::conversions::to_utf8string (fn).c_str (), -1, pMgr->GetIOSettings ()) )
+	if ( !pImporter->Initialize ((fn).c_str (), -1, pMgr->GetIOSettings ()) )
 		return (false) ;
 	if ( pImporter->IsFBX () ) {
 		// From this point, it is possible to access animation stack information without
@@ -157,10 +158,10 @@ bool gltfPackage::LoadScene (const utility::string_t &fn) {
 
 	bool bStatus =pImporter->Import (_scene) ;
 	if ( _ioSettings._name.length () )
-		_scene->SetName (utility::conversions::to_utf8string (_ioSettings._name).c_str ()) ;
+		_scene->SetName ((_ioSettings._name).c_str ()) ;
 	else if ( _scene->GetName () == FbxString ("") )
 		//_scene->SetName ("untitled") ;
-		_scene->SetName (utility::conversions::to_utf8string (gltfPackage::filename (fn)).c_str ()) ;
+		_scene->SetName ((gltfPackage::filename (fn)).c_str ()) ;
 
 	//if ( bStatus == false && pImporter->GetStatus ().GetCode () == FbxStatus::ePasswordError ) {
 	//}
@@ -236,16 +237,16 @@ bool gltfPackage::LoadScene (const utility::string_t &fn) {
 //	return (pAffectedNodes) ;
 //}
 
-bool gltfPackage::WriteScene (const utility::string_t &outdir) {
+bool gltfPackage::WriteScene (const std::string &outdir) {
 	auto pMgr =fbxSdkMgr::Instance ()->fbxMgr () ;
 	int iFormat =pMgr->GetIOPluginRegistry ()->FindWriterIDByExtension ("gltf") ;
 	if ( iFormat == -1 )
 		return (false) ;
 	FbxAutoDestroyPtr<FbxExporter> pExporter (FbxExporter::Create (pMgr, "")) ;
-	utility::string_t newFn =outdir + utility::conversions::to_string_t (_scene->GetName ()) + U(".gltf") ;
+	std::string newFn =outdir + (_scene->GetName ()) + (".gltf") ;
 	
-	bool bRet =pExporter->Initialize (utility::conversions::to_utf8string (newFn).c_str (), iFormat, pMgr->GetIOSettings ()) ;
-	_ASSERTE( bRet ) ;
+	bool bRet =pExporter->Initialize ((newFn).c_str (), iFormat, pMgr->GetIOSettings ()) ;
+	assert( bRet ) ;
 	if ( !bRet )
 		return (false) ;
 

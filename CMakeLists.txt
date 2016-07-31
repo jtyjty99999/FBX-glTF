@@ -11,15 +11,6 @@ endif ()
 
 string (TOLOWER ${CMAKE_BUILD_TYPE} glTF_BUILD_TYPE)
 
-if ( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
-	set (CASABLANCA_LIBRARY libcpprest.2.4.${LIBRARY_EXT})
-elseif ( UNIX )
-	set (CASABLANCA_LIBRARY libcpprest.${LIBRARY_EXT})
-else ()
-	set (CASABLANCA_LIBRARY libcpprest.2.4.${LIBRARY_EXT})
-endif ()
-message (STATUS "Using Casablanca: " ${CASABLANCA})
-
 set (FBX_SDK_INCLUDES ${FBX_SDK}/include)
 if ( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
 	set (FBX_SDK_LIBS ${FBX_SDK}/lib/clang/${glTF_BUILD_TYPE})
@@ -74,12 +65,12 @@ elseif ( "${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" )
 	set (LD_FLAGS "${LD_FLAGS} -Wl,-z,defs")
 
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-strict-aliasing")
-	set (LD_LIBRARY_PATH ${CASABLANCA_LIBS})
 else ()
 	message ("-- Unknown compiler, success is doubtful.")
 endif ()
 
 
+add_subdirectory (jsoncpp)
 add_subdirectory (IO-glTF)
 add_subdirectory (glTF)
 

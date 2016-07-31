@@ -93,23 +93,23 @@ bool IOglTF::SpecificInitialize () {
 /*static*/ const unsigned int IOglTF::FRAGMENT_SHADER ;
 /*static*/ const unsigned int IOglTF::VERTEX_SHADER ;
 #endif
-/*static*/ const utility::char_t *IOglTF::szSCALAR =U("SCALAR") ;
-/*static*/ const utility::char_t *IOglTF::szFLOAT =U("FLOAT") ;
-/*static*/ const utility::char_t *IOglTF::szVEC2 =U("VEC2") ;
-/*static*/ const utility::char_t *IOglTF::szVEC3 =U("VEC3") ;
-/*static*/ const utility::char_t *IOglTF::szVEC4 =U ("VEC4") ;
-/*static*/ const utility::char_t *IOglTF::szINT =U("INT") ; ;
-/*static*/ const utility::char_t *IOglTF::szIVEC2 =U("IVEC2") ; ;
-/*static*/ const utility::char_t *IOglTF::szIVEC3 =U("IVEC3") ; ;
-/*static*/ const utility::char_t *IOglTF::szIVEC4 =U("IVEC4") ; ;
-/*static*/ const utility::char_t *IOglTF::szBOOL =U("BOOL") ; ;
-/*static*/ const utility::char_t *IOglTF::szBVEC2 =U("BVEC2") ; ;
-/*static*/ const utility::char_t *IOglTF::szBVEC3 =U("BVEC3") ; ;
-/*static*/ const utility::char_t *IOglTF::szBVEC4 =U("BVEC4") ; ;
-/*static*/ const utility::char_t *IOglTF::szMAT2 =U("MAT2") ;
-/*static*/ const utility::char_t *IOglTF::szMAT3 =U("MAT3") ;
-/*static*/ const utility::char_t *IOglTF::szMAT4 =U("MAT4") ;
-/*static*/ const utility::char_t *IOglTF::szSAMPLER_2D =U("sampler2D") ;
+/*static*/ const char *IOglTF::szSCALAR =("SCALAR") ;
+/*static*/ const char *IOglTF::szFLOAT =("FLOAT") ;
+/*static*/ const char *IOglTF::szVEC2 =("VEC2") ;
+/*static*/ const char *IOglTF::szVEC3 =("VEC3") ;
+/*static*/ const char *IOglTF::szVEC4 =("VEC4") ;
+/*static*/ const char *IOglTF::szINT =("INT") ; ;
+/*static*/ const char *IOglTF::szIVEC2 =("IVEC2") ; ;
+/*static*/ const char *IOglTF::szIVEC3 =("IVEC3") ; ;
+/*static*/ const char *IOglTF::szIVEC4 =("IVEC4") ; ;
+/*static*/ const char *IOglTF::szBOOL =("BOOL") ; ;
+/*static*/ const char *IOglTF::szBVEC2 =("BVEC2") ; ;
+/*static*/ const char *IOglTF::szBVEC3 =("BVEC3") ; ;
+/*static*/ const char *IOglTF::szBVEC4 =("BVEC4") ; ;
+/*static*/ const char *IOglTF::szMAT2 =("MAT2") ;
+/*static*/ const char *IOglTF::szMAT3 =("MAT3") ;
+/*static*/ const char *IOglTF::szMAT4 =("MAT4") ;
+/*static*/ const char *IOglTF::szSAMPLER_2D =("sampler2D") ;
 #ifdef __APPLE__
 /*static*/ const unsigned int IOglTF::ARRAY_BUFFER ;
 /*static*/ const unsigned int IOglTF::ELEMENT_ARRAY_BUFFER ;
@@ -142,9 +142,9 @@ bool IOglTF::SpecificInitialize () {
 /*static*/ const unsigned int IOglTF::MIRRORED_REPEAT ;
 /*static*/ const unsigned int IOglTF::REPEAT ;
 #endif
-/*static*/ const web::json::value IOglTF::Identity2 =web::json::value::array ({ { 1., 0., 0., 1. } }) ;
-/*static*/ const web::json::value IOglTF::Identity3 =web::json::value::array ({ { 1., 0., 0., 0., 1., 0., 0., 0., 1. } }) ;
-/*static*/ const web::json::value IOglTF::Identity4 =web::json::value::array ({{ 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1. }}) ;
+/*static*/ const Json::Value IOglTF::Identity2 ;//=Json::Value::array ({ { 1., 0., 0., 1. } }) ;
+/*static*/ const Json::Value IOglTF::Identity3 ;// =Json::Value::array ({ { 1., 0., 0., 0., 1., 0., 0., 0., 1. } }) ;
+/*static*/ const Json::Value IOglTF::Identity4 ;// =Json::Value::array ({{ 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1. }}) ;
 
 // Get extension, description or version info about gltfWriter
 void *_gltfFormatInfo (FbxWriter::EInfoRequest pRequest, int pId) {
@@ -171,8 +171,8 @@ void *_gltfFormatInfo (FbxWriter::EInfoRequest pRequest, int pId) {
 }
 
 //-----------------------------------------------------------------------------
-/*static*/ unsigned int IOglTF::techniqueParameters (const utility::char_t *szType, int compType /*=FLOAT*/) {
-	utility::string_t st (szType) ;
+/*static*/ unsigned int IOglTF::techniqueParameters (const char *szType, int compType /*=FLOAT*/) {
+	std::string st (szType) ;
 	if ( st == szSCALAR )
 		return (compType) ;
 	if ( st == szVEC2 )
@@ -190,7 +190,7 @@ void *_gltfFormatInfo (FbxWriter::EInfoRequest pRequest, int pId) {
 	return (0) ;
 }
 
-/*static*/ const utility::char_t *IOglTF::glslAccessorType (unsigned int glType) {
+/*static*/ const char *IOglTF::glslAccessorType (unsigned int glType) {
 	switch ( glType ) {
 		case FLOAT:
 		case INT:
@@ -219,11 +219,11 @@ void *_gltfFormatInfo (FbxWriter::EInfoRequest pRequest, int pId) {
 		case FLOAT_MAT4:
 			return (szMAT4) ;
 	}
-	return (U("")) ;
+	return (("")) ;
 }
 
-/*static*/ const utility::string_t IOglTF::glslShaderType (unsigned int glType) {
-	utility::string_t szType ;
+/*static*/ const std::string IOglTF::glslShaderType (unsigned int glType) {
+	std::string szType ;
 	switch ( glType ) {
 		case FLOAT:
 			szType =szFLOAT ;
@@ -268,54 +268,126 @@ void *_gltfFormatInfo (FbxWriter::EInfoRequest pRequest, int pId) {
 	return (szType) ;
 }
 
-/*static*/ const utility::char_t *IOglTF::mimeType (const utility::char_t *szFilename) {
-	utility::string_t contentType =U("application/octet-stream") ;
-	FbxString ext =FbxPathUtils::GetExtensionName (utility::conversions::to_utf8string (szFilename).c_str ()) ;
+/*static*/ const char *IOglTF::mimeType (const char *szFilename) {
+	std::string contentType =("application/octet-stream") ;
+	FbxString ext =FbxPathUtils::GetExtensionName (szFilename) ;
 	ext =ext.Lower () ;
 	if ( ext == "png" )
-		return (U("image/png")) ;
+		return (("image/png")) ;
 	if ( ext == "gif" )
-		return (U("image/gif")) ;
+		return (("image/gif")) ;
 	if ( ext == "jpg" || ext == "jpeg" )
-		return (U("image/jpeg")) ;
-	return (U("application/octet-stream")) ;
+		return (("image/jpeg")) ;
+	return (("application/octet-stream")) ;
+}
+	
+/*
+base64.cpp and base64.h
+
+Copyright (C) 2004-2008 René Nyffenegger
+
+This source code is provided 'as-is', without any express or implied
+warranty. In no event will the author be held liable for any damages
+arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
+
+1. The origin of this source code must not be misrepresented; you must not
+claim that you wrote the original source code. If you use this source code
+in a product, an acknowledgment in the product documentation would be
+appreciated but is not required.
+
+2. Altered source versions must be plainly marked as such, and must not be
+misrepresented as being the original source code.
+
+3. This notice may not be removed or altered from any source distribution.
+
+René Nyffenegger rene.nyffenegger@adp-gmbh.ch
+
+*/
+	
+static const std::string base64_chars =
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	"abcdefghijklmnopqrstuvwxyz"
+	"0123456789+/";
+	
+std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
+  std::string ret;
+  int i = 0;
+  int j = 0;
+  unsigned char char_array_3[3];
+  unsigned char char_array_4[4];
+		
+  while (in_len--) {
+	  char_array_3[i++] = *(bytes_to_encode++);
+	  if (i == 3) {
+		  char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+		  char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+		  char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+		  char_array_4[3] = char_array_3[2] & 0x3f;
+		  
+		  for(i = 0; (i <4) ; i++)
+			  ret += base64_chars[char_array_4[i]];
+		  i = 0;
+	  }
+  }
+		
+  if (i)
+  {
+	  for(j = i; j < 3; j++)
+		  char_array_3[j] = '\0';
+	  
+	  char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
+	  char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
+	  char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
+	  char_array_4[3] = char_array_3[2] & 0x3f;
+	  
+	  for (j = 0; (j < i + 1); j++)
+		  ret += base64_chars[char_array_4[j]];
+	  
+	  while((i++ < 3))
+		  ret += '=';
+	  
+  }
+		
+  return ret;
+		
 }
 
-/*static*/ const utility::string_t IOglTF::dataURI (const utility::string_t fileName) {
+/*static*/ const std::string IOglTF::dataURI (const std::string fileName) {
 	// data:[<mime type>][;charset=<charset>][;base64],<encoded data>
-	utility::string_t st (U ("data:")) ;
-	Concurrency::streams::file_stream<uint8_t>::open_istream (fileName)
-		.then ([&] (pplx::task<Concurrency::streams::basic_istream<uint8_t> > previousTask) {
-		try {
-			auto fileStream =previousTask.get () ;
-			fileStream.seek (0, std::ios::end) ;
-			auto length =static_cast<size_t> (fileStream.tell ()) ;
-			fileStream.seek (0, std::ios_base::beg) ;
-			concurrency::streams::streambuf<uint8_t> buff (fileStream.streambuf ()) ;
+	std::string st (("data:")) ;
+	std::fstream fileStream( fileName );
+	
+	try {
+		fileStream.seekg (0, std::ios::end) ;
+		auto length =static_cast<size_t> (fileStream.tellg ()) ;
+		fileStream.seekg (0, std::ios_base::beg) ;
 
-			std::vector<uint8_t> v8 ;
-			v8.resize (length) ;
-			buff.seekpos (0, std::ios_base::binary) ;
-			buff.getn (&v8.front (), length) ;
+		std::vector<uint8_t> v8 ;
+		v8.resize (length) ;
+		fileStream.get (reinterpret_cast<char*>(v8.data()), length) ;
 
-			st +=IOglTF::mimeType (fileName.c_str ()) ;
-			//st +="[;charset=<charset>]" ;
-			st +=U (";base64") ;
-			st +=U (",") + utility::conversions::to_base64 (v8) ;
-		} catch ( ... ) {
-			//ucout << U("Error: ") << e.what () << std::endl ;
-		}
-	}).wait () ;
+		st +=IOglTF::mimeType (fileName.c_str ()) ;
+		//st +="[;charset=<charset>]" ;
+		st +=(";base64") ;
+		st +=(",") +  base64_encode( v8.data(), static_cast<uint32_t>(length) ) ;
+	} catch ( ... ) {
+		//std::cout << ("Error: ") << e.what () << std::endl ;
+	}
 	return (st) ;
 }
 
-/*static*/ const utility::string_t IOglTF::dataURI (memoryStream<uint8_t> &stream) {
+/*static*/ const std::string IOglTF::dataURI (memoryStream<uint8_t> &stream) {
 	// data:[<mime type>][;charset=<charset>][;base64],<encoded data>
-	utility::string_t st (U ("data:")) ;
-	st +=IOglTF::mimeType (U("")) ;
+	std::string st (("data:")) ;
+	st +=IOglTF::mimeType (("")) ;
 	//st +="[;charset=<charset>]" ;
-	st +=U (";base64") ;
-	st +=U (",") + utility::conversions::to_base64 (stream.vec ()) ;
+	st +=(";base64") ;
+	auto &vec = stream.vec();
+	st +=(",") + base64_encode( vec.data(), static_cast<uint32_t>(vec.size()) ) ;
 	return (st) ;
 }
 

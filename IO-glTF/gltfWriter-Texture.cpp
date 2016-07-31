@@ -26,25 +26,25 @@ namespace _IOglTF_NS_ {
 //FbxLayerElementTexture* texturesLayer =pNode->GetMesh ()->GetLayer (0)->GetTextures (FbxLayerElement::eTextureDiffuse) ;
 //FbxLayerElementArrayTemplate<FbxTexture *> &arrayTextures =texturesLayer->GetDirectArray() ;
 //for ( int j = 0; j < arrayTextures.GetCount (); j++ )
-//	ucout << U("\t  ") << j << (".- ") << arrayTextures.GetAt (j)->GetName () << std::endl
-//	   << U("\t  ") << j << (".- ") << ((FbxFileTexture *)arrayTextures.GetAt (j))->GetFileName () << std::endl;
+//	std::cout << ("\t  ") << j << (".- ") << arrayTextures.GetAt (j)->GetName () << std::endl
+//	   << ("\t  ") << j << (".- ") << ((FbxFileTexture *)arrayTextures.GetAt (j))->GetFileName () << std::endl;
 
-web::json::value gltfWriter::WriteTexture (FbxTexture *pTexture) {
-	utility::string_t name =utility::conversions::to_string_t (pTexture->GetNameWithoutNameSpacePrefix ().Buffer ()) ;
-	utility::string_t uri =utility::conversions::to_string_t (FbxCast<FbxFileTexture> (pTexture)->GetRelativeFileName ()) ;
-	web::json::value image =web::json::value::object ({{
-		name, web::json::value::object ({
-			{ U("name"), web::json::value::string (name) },
-			{ U("uri"), web::json::value::string (uri) }
-		}) }
-	}) ;
+Json::Value gltfWriter::WriteTexture (FbxTexture *pTexture) {
+	std::string name =(pTexture->GetNameWithoutNameSpacePrefix ().Buffer ()) ;
+	std::string uri =(FbxCast<FbxFileTexture> (pTexture)->GetRelativeFileName ()) ;
+	Json::Value ret;
+	auto &image = ret["images"];
+	auto &namedImage = image[name];
+	namedImage[("name")] = (name) ;
+	namedImage[("uri")] = (uri) ;
+	
 	if ( GetIOSettings ()->GetBoolProp (IOSN_FBX_GLTF_EMBEDMEDIA, false) ) {
 		// data:[<mime type>][;charset=<charset>][;base64],<encoded data>
 		FbxString imageFile =FbxCast<FbxFileTexture> (pTexture)->GetFileName () ;
-		image [name] [U("uri")] =web::json::value::string (IOglTF::dataURI (utility::conversions::to_string_t (imageFile.Buffer ()))) ;
+		image [name] [("uri")] =(IOglTF::dataURI ((imageFile.Buffer ()))) ;
 	} /*else*/
 	if ( GetIOSettings ()->GetBoolProp (IOSN_FBX_GLTF_COPYMEDIA, false) ) {
-		FbxString path =FbxPathUtils::GetFolderName (utility::conversions::to_utf8string (_fileName).c_str ()) ;
+		FbxString path =FbxPathUtils::GetFolderName ((_fileName).c_str ()) ;
 #if defined(_WIN32) || defined(_WIN64)
 		path +="\\" ;
 #else
@@ -56,41 +56,34 @@ web::json::value gltfWriter::WriteTexture (FbxTexture *pTexture) {
 		dst << src.rdbuf () ;
 	}
 
-	utility::string_t texName =createTextureName (pTexture->GetNameWithoutNameSpacePrefix ()) ;
-	utility::string_t samplerName =createSamplerName (pTexture->GetNameWithoutNameSpacePrefix ()) ;
-	web::json::value textureDef =web::json::value::object ({
-		{ U("name"), web::json::value::string (texName) },
-		{ U("format"), web::json::value::number ((int)IOglTF::RGBA) }, // todo
-		{ U("internalFormat"), web::json::value::number ((int)IOglTF::RGBA) }, // todo
-		{ U("sampler"), web::json::value::string (samplerName) }, // todo do I need one everytime
-		{ U("source"), web::json::value::string (name) },
-		{ U("target"), web::json::value::number ((int)IOglTF::TEXTURE_2D) },
-		{ U("type"), web::json::value::number ((int)IOglTF::UNSIGNED_BYTE) } // todo
-	}) ;
-
-	web::json::value texture =web::json::value::object ({{ texName, textureDef }}) ;
+	std::string texName =createTextureName (pTexture->GetNameWithoutNameSpacePrefix ()) ;
+	std::string samplerName =createSamplerName (pTexture->GetNameWithoutNameSpacePrefix ()) ;
+	
+	auto &textureDef = ret["textures"][texName];
+	textureDef[("name")] = (texName);
+	textureDef[("format")] = ((int)IOglTF::RGBA);
+	textureDef[("internalFormat")] = ((int)IOglTF::RGBA);
+	textureDef[("sampler")] = (samplerName); // todo do I need one everytime
+	textureDef[("source")] = (name);
+	textureDef[("target")] = ((int)IOglTF::TEXTURE_2D) ;
+	textureDef[("type")] = ((int)IOglTF::UNSIGNED_BYTE) ;
 	
 	//TODO: Shall try to find a similar sampler defined already vs create one each time?
-	web::json::value samplerDef =web::json::value::object ({
-		{ U("name"), web::json::value::string (samplerName) },
-		{ U("magFilter"), web::json::value::number ((int)IOglTF::LINEAR) },
-		{ U("minFilter"), web::json::value::number ((int)IOglTF::LINEAR_MIPMAP_LINEAR) },
-		{ U("wrapS"), web::json::value::number ((int)(pTexture->WrapModeU.Get () == FbxTexture::eRepeat ? IOglTF::REPEAT : IOglTF::CLAMP_TO_EDGE)) },
-		{ U("wrapT"), web::json::value::number ((int)(pTexture->WrapModeV.Get () == FbxTexture::eRepeat ? IOglTF::REPEAT : IOglTF::CLAMP_TO_EDGE)) }
-	}) ;
+	auto &samplerDef = ret["samplers"][samplerName];
+	samplerDef[("name")] = (samplerName);
+	samplerDef[("magFilter")] = ((int)IOglTF::LINEAR) ;
+	samplerDef[("minFilter")] = ((int)IOglTF::LINEAR_MIPMAP_LINEAR) ;
+	samplerDef[("wrapS")] = ((int)(pTexture->WrapModeU.Get () == FbxTexture::eRepeat ? IOglTF::REPEAT : IOglTF::CLAMP_TO_EDGE)) ;
+	samplerDef[("wrapT")] = ((int)(pTexture->WrapModeV.Get () == FbxTexture::eRepeat ? IOglTF::REPEAT : IOglTF::CLAMP_TO_EDGE)) ;
 
-	return (web::json::value::object ({
-		{ U("images"), image },
-		{ U("textures"), web::json::value::object ({{ texName, textureDef }}) },
-		{ U("samplers"), web::json::value::object ({{ samplerName, samplerDef }}) }
-	})) ;
+	return ret;
 }
 
-web::json::value gltfWriter::WriteTextureBindings (FbxMesh *pMesh, FbxSurfaceMaterial *pMaterial, web::json::value &params) {
+Json::Value gltfWriter::WriteTextureBindings (FbxMesh *pMesh, FbxSurfaceMaterial *pMaterial, Json::Value &params) {
 	return false ;
 }
 
-//web::json::value gltfWriter::WriteTextureBindings (FbxMesh *pMesh, FbxSurfaceMaterial *pMaterial, web::json::value &params) {
+//Json::Value gltfWriter::WriteTextureBindings (FbxMesh *pMesh, FbxSurfaceMaterial *pMaterial, Json::Value &params) {
 //	// Export textures used by the mesh material
 //	//for ( int textureTypeIndex =(int)FbxLayerElement::sTypeTextureStartIndex ; textureTypeIndex <= (int)FbxLayerElement::sTypeTextureEndIndex ; textureTypeIndex++ ) {
 //		//FbxLayerElementTexture *pLayerElementTexture =pLayer->GetTextures ((FbxLayerElement::EType)textureTypeIndex) ;
@@ -108,7 +101,7 @@ web::json::value gltfWriter::WriteTextureBindings (FbxMesh *pMesh, FbxSurfaceMat
 //				for ( int k =0 ; k < nbTexture ; k++ ) {
 //					FbxTexture *pTexture =pLayeredTexture->GetSrcObject<FbxTexture> (k) ;
 //					if ( pTexture ) {
-//						utility::string_t name =U("texture_") + utility::conversions::to_string_t (pTexture->GetNameWithoutNameSpacePrefix ().Buffer ()) ;
+//						std::string name =("texture_") + utility::conversions::to_string_t (pTexture->GetNameWithoutNameSpacePrefix ().Buffer ()) ;
 //						//texture_id = getTextureName (texture, True)
 //						//material_params [binding_types [str (material_property.GetName ())]] = texture_id
 //					}
@@ -120,7 +113,7 @@ web::json::value gltfWriter::WriteTextureBindings (FbxMesh *pMesh, FbxSurfaceMat
 //			for ( int j =0 ; j < nbLayeredTexture ; j++ ) {
 //				FbxTexture *pTexture =materialProperty.GetSrcObject<FbxTexture> (j) ;
 //				if ( pTexture ) {
-//					utility::string_t name =U("texture_") + utility::conversions::to_string_t (pTexture->GetNameWithoutNameSpacePrefix ().Buffer ()) ;
+//					std::string name =("texture_") + utility::conversions::to_string_t (pTexture->GetNameWithoutNameSpacePrefix ().Buffer ()) ;
 //					//texture_id = getTextureName (texture, True)
 //					//material_params [binding_types [str (material_property.GetName ())]] = texture_id
 //				}
@@ -131,7 +124,7 @@ web::json::value gltfWriter::WriteTextureBindings (FbxMesh *pMesh, FbxSurfaceMat
 //}
 
 /*
-web::json::value gltfWriter::WriteTextureBindings (FbxMesh *pMesh, web::json::value &materials, web::json::value &techniques) {
+Json::Value gltfWriter::WriteTextureBindings (FbxMesh *pMesh, Json::Value &materials, Json::Value &techniques) {
 	// Export textures used by the mesh
 	int nbLayer =pMesh->GetLayerCount () ;
 	for ( int layerIndex =0 ; layerIndex < nbLayer; layerIndex++ ) {
@@ -163,34 +156,34 @@ web::json::value gltfWriter::WriteTextureBindings (FbxMesh *pMesh, web::json::va
 					pTexture =FbxCast<FbxFileTexture> (textureArray [texIndex]) ;
 				if ( !pTexture )
 					continue ;
-				utility::string_t name =utility::conversions::to_string_t (pTexture->GetNameWithoutNameSpacePrefix ().Buffer ()) ;
-				utility::string_t uri =utility::conversions::to_string_t (pTexture->GetRelativeFileName ()) ;
-				web::json::value image =web::json::value::object ({{
-						name, web::json::value::object ({
-							{ U("name"), web::json::value::string (name) },
-							{ U("uri"), web::json::value::string (uri) }
+				std::string name =utility::conversions::to_string_t (pTexture->GetNameWithoutNameSpacePrefix ().Buffer ()) ;
+				std::string uri =utility::conversions::to_string_t (pTexture->GetRelativeFileName ()) ;
+				Json::Value image =Json::Value::object ({{
+						name, Json::Value::object ({
+							{ ("name"), (name) },
+							{ ("uri"), (uri) }
 						}) }
 				}) ;
 
-				utility::string_t texName (U("texture_") + name) ;
-				web::json::value textureDef =web::json::value::object ({
-					{ U("name"), web::json::value::string (texName) },
-		//			{ U("format"), web::json::value::string (uri) },
-		//			{ U("internalFormat"), web::json::value::string (uri) },
-		//			{ U("sampler"), web::json::value::string (uri) },
-					{ U("source"), web::json::value::string (name) },
-		//			{ U("target"), web::json::value::string (uri) },
-					{ U("type"), web::json::value::number ((int)IOglTF::TEXTURE_2D) }
+				std::string texName (("texture_") + name) ;
+				Json::Value textureDef =Json::Value::object ({
+					{ ("name"), (texName) },
+		//			{ ("format"), (uri) },
+		//			{ ("internalFormat"), (uri) },
+		//			{ ("sampler"), (uri) },
+					{ ("source"), (name) },
+		//			{ ("target"), (uri) },
+					{ ("type"), ((int)IOglTF::TEXTURE_2D) }
 				}) ;
 
-				web::json::value texture =web::json::value::object ({{ texName, textureDef }}) ;
+				Json::Value texture =Json::Value::object ({{ texName, textureDef }}) ;
 				
-				web::json::value samplerDef =web::json::value::object ({
-					{ U("name"), web::json::value::string (texName) },
-					{ U("magFilter"), web::json::value::number ((int)IOglTF::LINEAR) },
-					{ U("minFilter"), web::json::value::number ((int)IOglTF::LINEAR_MIPMAP_LINEAR) },
-					{ U("wrapS"), web::json::value::number ((int)(pTexture->WrapModeU.Get () == FbxTexture::eRepeat ? IOglTF::REPEAT : IOglTF::CLAMP_TO_EDGE)) },
-					{ U("wrapT"), web::json::value::number ((int)(pTexture->WrapModeV.Get () == FbxTexture::eRepeat ? IOglTF::REPEAT : IOglTF::CLAMP_TO_EDGE)) }
+				Json::Value samplerDef =Json::Value::object ({
+					{ ("name"), (texName) },
+					{ ("magFilter"), ((int)IOglTF::LINEAR) },
+					{ ("minFilter"), ((int)IOglTF::LINEAR_MIPMAP_LINEAR) },
+					{ ("wrapS"), ((int)(pTexture->WrapModeU.Get () == FbxTexture::eRepeat ? IOglTF::REPEAT : IOglTF::CLAMP_TO_EDGE)) },
+					{ ("wrapT"), ((int)(pTexture->WrapModeV.Get () == FbxTexture::eRepeat ? IOglTF::REPEAT : IOglTF::CLAMP_TO_EDGE)) }
 				}) ;
 
 
@@ -200,7 +193,7 @@ web::json::value gltfWriter::WriteTextureBindings (FbxMesh *pMesh, web::json::va
 	return (false) ;
 }*/
 
-//web::json::value gltfWriter::WriteTextures (FbxMesh *pMesh) {
+//Json::Value gltfWriter::WriteTextures (FbxMesh *pMesh) {
 //	// Export textures used by the mesh
 //	FbxNode *pNode =pMesh->GetNode () ;
 //	int nbLayer =pMesh->GetLayerCount () ;

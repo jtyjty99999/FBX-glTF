@@ -36,10 +36,8 @@
 
 // C++ REST SDK (codename "Casablanca")
 // https://casablanca.codeplex.com/
-#include <cpprest/filestream.h>
-#include <cpprest/json.h>
-typedef web::json::value JsonValue ;
-typedef web::json::value::value_type JsonValueType ;
+#include "jsoncpp/json-forwards.h"
+typedef Json::Value JsonValue ;
 
 // C++ FBX SDK
 // http://www.autodeks.com/developfbx

@@ -23,7 +23,7 @@
 namespace utility {
 	namespace conversions {
 
-inline utility::string_t to_string_t (int val) {
+inline std::string to_string_t (int val) {
 #ifdef _UTF16_STRINGS
 	return (std::to_wstring (val)) ;
 #else
@@ -35,12 +35,12 @@ inline utility::string_t to_string_t (int val) {
 
 	namespace details {
 
-inline int limitedCompareTo (const utility::string_t &a, const utility::string_t &b) {
+inline int limitedCompareTo (const std::string &a, const std::string &b) {
 	return (a.compare (0, b.size (), b)) ;
 }
 
-inline int limitedCompareTo (const utility::string_t &a, const utility::char_t *b) {
-	return (a.compare (0, utility::string_t (b).size (), utility::string_t (b))) ;
+inline int limitedCompareTo (const std::string &a, const char *b) {
+	return (a.compare (0, std::string (b).size (), std::string (b))) ;
 }
 
 	}

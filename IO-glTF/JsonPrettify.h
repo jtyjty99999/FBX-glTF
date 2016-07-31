@@ -22,34 +22,34 @@
 
 namespace _IOglTF_NS_ {
 
-class JsonPrettify {
-	static web::json::value sNull ;
-	web::json::value &_json ;
-	int _level ;
-
-protected:
-	JsonPrettify () : _json (JsonPrettify::sNull) {}
-
-	void serialize (web::json::value &val, utility::ostream_t &stream) ;
-	void indent (utility::ostream_t &stream) ;
-	void format_string (const utility::string_t &st, utility::ostream_t &stream) ;
-	void format_boolean (const bool val, utility::ostream_t &stream) ;
-	void format_integer (const int val, utility::ostream_t &stream) ;
-	void format_double (const double val, utility::ostream_t &stream) ;
-	void format_null (utility::ostream_t &stream) ;
-	void formatValue (web::json::value &val, utility::ostream_t &stream) ;
-	void formatPair (utility::string_t &key, web::json::value &val, utility::ostream_t &stream) ;
-	void formatArray (web::json::array &arr, utility::ostream_t &stream) ;
-	void formatObject (web::json::object &obj, utility::ostream_t &stream) ;
-
-	template<typename CharType>
-	static void append_escape_string (std::basic_string<CharType> &str, const std::basic_string<CharType> &escaped) ;
-
-public:
-	JsonPrettify (web::json::value &json) : _json (json), _level (0) {} 
-
-	void serialize (utility::ostream_t &stream) ;
-
-} ;
+//class JsonPrettify {
+//	static Json::Value sNull ;
+//	Json::Value &_json ;
+//	int _level ;
+//
+//protected:
+//	JsonPrettify () : _json (JsonPrettify::sNull) {}
+//
+//	void serialize (Json::Value &val, utility::ostream_t &stream) ;
+//	void indent (utility::ostream_t &stream) ;
+//	void format_string (const std::string &st, utility::ostream_t &stream) ;
+//	void format_boolean (const bool val, utility::ostream_t &stream) ;
+//	void format_integer (const int val, utility::ostream_t &stream) ;
+//	void format_double (const double val, utility::ostream_t &stream) ;
+//	void format_null (utility::ostream_t &stream) ;
+//	void formatValue (Json::Value &val, utility::ostream_t &stream) ;
+//	void formatPair (std::string &key, Json::Value &val, utility::ostream_t &stream) ;
+//	void formatArray (web::json::array &arr, utility::ostream_t &stream) ;
+//	void formatObject (web::json::object &obj, utility::ostream_t &stream) ;
+//
+//	template<typename CharType>
+//	static void append_escape_string (std::basic_string<CharType> &str, const std::basic_string<CharType> &escaped) ;
+//
+//public:
+//	JsonPrettify (Json::Value &json) : _json (json), _level (0) {} 
+//
+//	void serialize (utility::ostream_t &stream) ;
+//
+//} ;
 
 }

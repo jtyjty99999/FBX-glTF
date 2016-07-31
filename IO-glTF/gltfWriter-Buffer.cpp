@@ -24,22 +24,22 @@
 namespace _IOglTF_NS_ {
 
 bool gltfWriter::WriteBuffer () {
-	web::json::value buffer =web::json::value::object () ;
-	FbxString filename =FbxPathUtils::GetFileName (utility::conversions::to_utf8string (_fileName).c_str (), false) ;
-	buffer [U("name")] =web::json::value::string (utility::conversions::to_string_t (filename.Buffer ())) ;
+	Json::Value buffer ;
+	FbxString filename =FbxPathUtils::GetFileName ((_fileName).c_str (), false) ;
+	buffer [("name")] =filename.Buffer () ;
 
-	buffer [U("uri")] =web::json::value::string (utility::conversions::to_string_t ((filename + ".bin").Buffer ())) ;
+	buffer [("uri")] =(filename + ".bin").Buffer () ;
 	// The Buffer file should be fully completed by now.
 	if ( GetIOSettings ()->GetBoolProp (IOSN_FBX_GLTF_EMBEDMEDIA, false) ) {
 		// data:[<mime type>][;charset=<charset>][;base64],<encoded data>
-		buffer [U("uri")] =web::json::value::string (IOglTF::dataURI (_bin)) ;
+		buffer [("uri")] =IOglTF::dataURI (_bin) ;
 	}
 
 	if ( _writeDefaults )
-		buffer [U("type")] =web::json::value::string (U("arraybuffer")) ; ; // default is arraybuffer
-	buffer [U("byteLength")] =web::json::value::number ((int)_bin.tellg ()) ;
+		buffer [("type")] =("arraybuffer") ; ; // default is arraybuffer
+	buffer [("byteLength")] =((int)_bin.tellg ()) ;
 
-	_json [U("buffers")] [utility::conversions::to_string_t (filename.Buffer ())] =buffer ;
+	_json [("buffers")] [filename.Buffer ()] =buffer ;
 	return (true) ;
 }
 

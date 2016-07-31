@@ -23,10 +23,11 @@
 
 namespace _IOglTF_NS_ {
 
-web::json::value gltfWriter::WriteProgram (FbxNode *pNode, FbxSurfaceMaterial *pMaterial, utility::string_t programName, web::json::value &attributes) {
-	web::json::value programAttributes =web::json::value::array () ;
-	for ( const auto &iter : attributes.as_object () )
-		programAttributes [programAttributes.size ()] =web::json::value::string (iter.first) ;
+Json::Value gltfWriter::WriteProgram (FbxNode *pNode, FbxSurfaceMaterial *pMaterial, std::string programName, Json::Value &attributes) {
+	Json::Value programAttributes ;
+	auto memberNames = attributes.getMemberNames();
+	for ( const auto &name : memberNames )
+		programAttributes [programAttributes.size ()] =(name) ;
 
 	// Get the implementation to see if it's a hardware shader.
 	if ( pMaterial != nullptr ) {
@@ -48,36 +49,35 @@ web::json::value gltfWriter::WriteProgram (FbxNode *pNode, FbxSurfaceMaterial *p
 		//	//pImplementation =pNode->GetImplementation (0) ;
 		//}
 	}
-	FbxString filename =FbxPathUtils::GetFileName (utility::conversions::to_utf8string (_fileName).c_str (), false) ;
+	FbxString filename =FbxPathUtils::GetFileName ((_fileName).c_str (), false) ;
 
-	web::json::value program =web::json::value::object ({
-		{ U("attributes"), programAttributes },
-		{ U("name"), web::json::value::string (programName) },
-		//{ U("fragmentShader"), web::json::value::string (utility::conversions::to_string_t (filename.Buffer ()) + U("0FS")) },
-		//{ U("vertexShader"), web::json::value::string (utility::conversions::to_string_t (filename.Buffer ()) + U("0VS")) }
-		{ U("fragmentShader"), web::json::value::string (programName + U("FS")) },
-		{ U("vertexShader"), web::json::value::string (programName + U("VS")) }
-	}) ;
-	web::json::value lib =web::json::value::object ({{ programName, program }}) ;
+	Json::Value program ;
+	program[("attributes")] = programAttributes ;
+	program[("name")] = (programName) ;
+	program[("fragmentShader")] = (programName + ("FS")) ;
+	program[("vertexShader")] = (programName + ("VS")) ;
 
-	web::json::value shaders =WriteShaders (pNode, program) ;
+	Json::Value lib ;
+	lib[programName] = program ;
 
-	return (web::json::value::object ({ { U("programs"), lib }, { U("shaders"), shaders } })) ;
+	Json::Value shaders =WriteShaders (pNode, program) ;
+	Json::Value ret;
+	ret["programs"] = lib;
+	ret["shaders"] = shaders;
+	return ret ;
 }
 
-web::json::value gltfWriter::WriteShaders (FbxNode *pNode, web::json::value &program) {
-	web::json::value fragmentShader =web::json::value::object ({
-		{ U("type"), web::json::value::number ((int)IOglTF::FRAGMENT_SHADER) },
-		{ U("uri"), web::json::value::string (program [U("fragmentShader")].as_string () + U(".glsl")) }
-	}) ;
-	web::json::value vertexShader =web::json::value::object ({
-		{ U ("type"), web::json::value::number ((int)IOglTF::VERTEX_SHADER) },
-		{ U ("uri"), web::json::value::string (program [U("vertexShader")].as_string () + U(".glsl")) }
-	}) ;
-	return (web::json::value::object ({
-		{ program [U("fragmentShader")].as_string (), fragmentShader },
-		{ program [U ("vertexShader")].as_string (), vertexShader }
-	})) ;
+Json::Value gltfWriter::WriteShaders (FbxNode *pNode, Json::Value &program) {
+	Json::Value ret ;
+	auto &fragment = ret[program [("fragmentShader")].asString ()];
+	fragment[("type")] = ((int)IOglTF::FRAGMENT_SHADER) ;
+	fragment[("uri")] = (program [("fragmentShader")].asString () + (".glsl")) ;
+	
+	auto &vertex = ret[program [("vertexShader")].asString ()];
+	vertex[("type")] = ((int)IOglTF::VERTEX_SHADER) ;
+	vertex[("uri")] = (program [("vertexShader")].asString () + (".glsl")) ;
+
+	return ret;
 }
 
 }

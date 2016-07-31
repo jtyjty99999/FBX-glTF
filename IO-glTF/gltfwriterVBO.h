@@ -54,7 +54,7 @@ class gltfwriterVBO {
 	std::vector<FbxDouble3> _in_tangents, _out_tangents ;
 	std::vector<FbxDouble3> _in_binormals, _out_binormals ;
 	std::vector<FbxColor> _in_vcolors, _out_vcolors ;
-	std::map<utility::string_t, utility::string_t> _uvSets ;
+	std::map<std::string, std::string> _uvSets ;
 	FbxMesh *_pMesh ;
 
 public:
@@ -72,7 +72,7 @@ public:
 	std::vector<FbxDouble3> getTangents () { return (_out_tangents) ; }
 	std::vector<FbxDouble3> getBinormals () { return (_out_binormals) ; }
 	std::vector<FbxColor> getVertexColors () { return (_out_vcolors) ; }
-	std::map<utility::string_t, utility::string_t> getUvSets () { return (_uvSets) ; }
+	std::map<std::string, std::string> getUvSets () { return (_uvSets) ; }
 
 protected:
 	FbxLayerElementNormal *elementNormals (int iLayer =-1) ;
@@ -106,7 +106,7 @@ class gltfwriterVBOT {
 	std::vector<FbxDouble3> _in_tangents, _out_tangents ;
 	std::vector<FbxDouble3> _in_binormals, _out_binormals ;
 	std::vector<FbxColor> _in_vcolors, _out_vcolors ;
-	std::map<utility::string_t, utility::string_t> _uvSets ;
+	std::map<std::string, std::string> _uvSets ;
 	T *_pMesh ;
 
 public:
@@ -124,7 +124,7 @@ public:
 	std::vector<FbxDouble3> getTangents () { return (_out_tangents) ; }
 	std::vector<FbxDouble3> getBinormals () { return (_out_binormals) ; }
 	std::vector<FbxColor> getVertexColors () { return (_out_vcolors) ; }
-	std::map<utility::string_t, utility::string_t> getUvSets () { return (_uvSets) ; }
+	std::map<std::string, std::string> getUvSets () { return (_uvSets) ; }
 
 protected:
 	FbxLayerElementNormal *elementNormals (int iLayer =-1) ;

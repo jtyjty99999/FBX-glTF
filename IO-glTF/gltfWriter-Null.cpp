@@ -24,9 +24,10 @@
 namespace _IOglTF_NS_ {
 
 //-----------------------------------------------------------------------------
-web::json::value gltfWriter::WriteNull (FbxNode *pNode) {
-	web::json::value node =WriteNode (pNode) ;
-	web::json::value ret =web::json::value::object ({ { U("nodes"), node } }) ;
+Json::Value gltfWriter::WriteNull (FbxNode *pNode) {
+	Json::Value node =WriteNode (pNode) ;
+	Json::Value ret ;
+	ret["nodes"] =node ;
 	return (ret) ;
 }
 

@@ -21,6 +21,7 @@
 #pragma once
 
 #include <fbxsdk.h>
+#include <string>
 //#include "webgl-idl.h"
 
 //-----------------------------------------------------------------------------
@@ -44,7 +45,7 @@ public:
 class gltfPackage {
 protected:
 	struct IOSettings {
-		utility::string_t _name ;
+		std::string _name ;
 	} _ioSettings ;
 
 protected:
@@ -55,7 +56,7 @@ public:
 	virtual ~gltfPackage () ;
 
 	void ioSettings (
-		const utility::char_t *name =nullptr,
+		const char *name =nullptr,
 		bool angleInDegree =false,
 		bool reverseTransparency =false,
 		bool defaultLighting =false,
@@ -63,16 +64,16 @@ public:
 		bool embedMedia =false
 	) ;
 
-	bool load (const utility::string_t &fn) ;
-	bool import (const utility::string_t &fn) ;
+	bool load (const std::string &fn) ;
+	bool import (const std::string &fn) ;
 
-	bool save (const utility::string_t &outdir) ;
+	bool save (const std::string &outdir) ;
 
-	static utility::string_t filename (const utility::string_t &path) ;
-	static utility::string_t pathname (const utility::string_t &filename) ;
+	static std::string filename (const std::string &path) ;
+	static std::string pathname (const std::string &filename) ;
 	
 protected:
-	bool LoadScene (const utility::string_t &fn) ;
-	bool WriteScene (const utility::string_t &outdir) ;
+	bool LoadScene (const std::string &fn) ;
+	bool WriteScene (const std::string &outdir) ;
 
 } ;

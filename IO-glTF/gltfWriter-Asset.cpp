@@ -24,7 +24,7 @@
 namespace _IOglTF_NS_ {
 
 bool gltfWriter::WriteAsset (FbxDocumentInfo *pSceneInfo) {
-	web::json::value asset =web::json::value::object () ;
+	Json::Value asset ;
 
 	// unit - <meter> and <name>. In FBX we always work in centimeters, but we already converted to meter here
 	//double scale =_scene->GetGlobalSettings ().GetSystemUnit ().GetScaleFactor () / 100. ;
@@ -34,20 +34,18 @@ bool gltfWriter::WriteAsset (FbxDocumentInfo *pSceneInfo) {
 	//FbxAxisSystem axisSystem =pScene->GetGlobalSettings ().GetAxisSystem () ;
 
 	// FBX uses author and comments, not authoring_tool(i.e. generator), and copyright.
-	asset [U("copyright")] =web::json::value::string (utility::conversions::to_string_t (pSceneInfo->mAuthor.Buffer ())) ;
-	asset [U("generator")] =web::json::value::string (FBX_GLTF_EXPORTER) ;
+	asset [("copyright")] =(pSceneInfo->mAuthor.Buffer ()) ;
+	asset [("generator")] =(FBX_GLTF_EXPORTER) ;
 	if ( _writeDefaults )
-		asset [U ("premultipliedAlpha")] =web::json::value::boolean (false) ;
+		asset [("premultipliedAlpha")] =(false) ;
 	if (_writeDefaults) {
-		asset[U("profile")] = web::json::value::object({
-			{ U("api"), web::json::value::string (PROFILE_API) }, // default "WebGL"
-			{ U("version"), web::json::value::string (PROFILE_VERSION) } } // default 1.0.3
-		) ;
+		asset[("profile")]["api"] =(PROFILE_API) ; // default "WebGL"
+		asset[("profile")]["version"] =(PROFILE_VERSION) ; // default 1.0.3
 	}
 
-	asset [U("version")] =web::json::value::string (GLTF_VERSION) ;
+	asset [("version")] =(GLTF_VERSION) ;
 
-	_json [U("asset")] =asset ;
+	_json [("asset")] =asset ;
 	return (true) ;
 }
 

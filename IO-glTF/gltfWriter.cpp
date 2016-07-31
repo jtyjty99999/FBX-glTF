@@ -23,29 +23,30 @@
 #ifdef _DEBUG
 #include "JsonPrettify.h"
 #endif
-
+#include <array>
 #include <stdlib.h>
 #define _DEBUG_VERBOSE 1
 
 namespace _IOglTF_NS_ {
 
 //-----------------------------------------------------------------------------
-web::json::value &MergeJsonObjects (web::json::value &a, const web::json::value &b) {
-	if ( b.is_null () || !b.is_object () )
+Json::Value &MergeJsonObjects (Json::Value &a, const Json::Value &b) {
+	if ( b.isNull () || !b.isObject () )
 		return (a) ;
-	for ( const auto &iter : b.as_object () ) {
-		if ( !a.has_field (iter.first) ) {
-			a [iter.first] =iter.second ;
+	auto memberNames = b.getMemberNames();
+	for ( const auto &name : memberNames ) {
+		if ( !a.isMember (name) ) {
+			a [name] =b[name] ;
 		} else {
-			MergeJsonObjects (a [iter.first], b.at (iter.first)) ;
+			MergeJsonObjects (a [name], b[(name)]) ;
 		}
 	}
 	return (a) ;
 }
 
-utility::string_t GetJsonObjectKeyAt (web::json::value &a, int i) {
-	const auto &b =a.as_object () ;
-	return (b.begin ()->first) ;
+std::string GetJsonObjectKeyAt (Json::Value &a, int i) {
+	const auto &b =a.getMemberNames() ;
+	return (b.front()) ;
 }
 
 //-----------------------------------------------------------------------------
@@ -78,12 +79,22 @@ gltfWriter::~gltfWriter () {
 
 bool gltfWriter::FileCreate (char *pFileName) {
 	FbxString fileName =FbxPathUtils::Clean (pFileName) ;
-	_fileName =utility::conversions::to_string_t (fileName.Buffer ()) ;
+	_fileName = (fileName.Buffer ()) ;
 
-	//utility::string_t path =_GLTF_NAMESPACE_::GetModulePath () ;
-	utility::string_t path =utility::conversions::to_string_t ((const char *)FbxGetApplicationDirectory ()) ;
-	utility::ifstream_t input (path + U("glTF-1-0.json"), std::ios::in) ;
-	_json =web::json::value::parse (input) ;
+	//std::string path =_GLTF_NAMESPACE_::GetModulePath () ;
+	std::string path = ((const char *)FbxGetApplicationDirectory ()) ;
+	std::ifstream input (path + ("glTF-1-0.json"), std::ios::in) ;
+	
+	Json::Features features;
+	features.allowComments_ = false;
+	features.strictRoot_ = true;
+	Json::Reader reader( features );
+	try {
+		reader.parse( input, _json, false );
+	}
+	catch ( const std::exception &ex ) {
+		std::cout << ex.what() << std::endl;
+	}
 	input.close () ;
 
 	if ( !FbxPathUtils::Create (FbxPathUtils::GetFolderName (fileName)) )
@@ -97,16 +108,18 @@ bool gltfWriter::FileCreate (char *pFileName) {
 bool gltfWriter::FileClose () {
 	PrepareForSerialization () ;
 #ifdef _DEBUG
-	JsonPrettify prettify (_json) ;
-	prettify.serialize (_gltf) ;
+	Json::StyledWriter writer;
+	writer.write( _json );
 #else
-	_json.serialize (_gltf) ;
+	Json::FastWriter writer;
+	auto temp = writer.write( _json );
+	_gltf.write( temp.c_str(), temp.length() ) ;
 #endif
 	_gltf.close () ;
 
 	// If media saved in file, gltfWriter::PostprocessScene / gltfWriter::WriteBuffer should have embed the data already
 	if ( !GetIOSettings ()->GetBoolProp (IOSN_FBX_GLTF_EMBEDMEDIA, false) ) {
-		FbxString fileName (utility::conversions::to_utf8string (_fileName).c_str ()) ;
+		FbxString fileName ( (_fileName).c_str ()) ;
 #if defined(_WIN32) || defined(_WIN64)
 		fileName =FbxPathUtils::GetFolderName (fileName) + "\\" + FbxPathUtils::GetFileName (fileName, false) + ".bin" ;
 #else
@@ -278,9 +291,9 @@ void gltfWriter::PreprocessNodeRecursive (FbxNode *pNode) {
 //	pMesh =FbxCast<FbxMesh> (lConverter.Triangulate (pMesh, true));
 
 bool gltfWriter::PostprocessScene (FbxScene &scene) {
-	/*web::json::value val =WriteAmbientLight (pScene) ;
+	/*Json::Value val =WriteAmbientLight (pScene) ;
 	for ( const auto &iter : val.as_object () )
-		_json [U("lights")] [iter.first] =iter.second ;
+		_json [("lights")] [iter.first] =iter.second ;
 	*/
 	//if ( GetIOSettings ()->GetBoolProp (IOSN_FBX_GLTF_COPYMEDIA, false) ) {
 	//#if defined(_WIN32) || defined(_WIN64)
@@ -288,7 +301,7 @@ bool gltfWriter::PostprocessScene (FbxScene &scene) {
 	//#else
 	//	FbxString path =FbxPathUtils::GetFolderName (utility::conversions::to_utf8string (_fileName).c_str ()) + "/" ;
 	//#endif
-	//	for ( const auto &iter : _json [U("images")].as_object () ) {
+	//	for ( const auto &iter : _json [("images")].as_object () ) {
 	//	}
 	//		
 	//}
@@ -332,7 +345,7 @@ void gltfWriter::PrepareForSerialization () {
 	//	auto k =iter->first ;
 	//	auto v =iter->second ;
 
-	//	auto key =k.as_string () ;
+	//	auto key =k.asString () ;
 	//	auto value =v.to_string () ;
 
 	//	wcout << key << L" : " << value << " (" << JsonValueTypeToString (v.type ()) << ")" << endl;
@@ -340,7 +353,7 @@ void gltfWriter::PrepareForSerialization () {
 }
 
 //-----------------------------------------------------------------------------
-bool gltfWriter::recordId (FbxUInt64 uniqid, utility::string_t id) {
+bool gltfWriter::recordId (FbxUInt64 uniqid, std::string id) {
 	if ( !isKnownId (uniqid) ) {
 		_IDs [uniqid] =id ;
 		return (false) ;
@@ -352,129 +365,137 @@ bool gltfWriter::isKnownId (FbxUInt64 uniqid) {
 	return (_IDs.find (uniqid) != _IDs.end ()) ;
 }
 
-bool gltfWriter::isKnownId (utility::string_t id) {
+bool gltfWriter::isKnownId (std::string id) {
 	//return (std::find (_registeredIDs.begin (), _registeredIDs.end (), id) != _registeredIDs.end ()) ;
-	auto findResult =std::find_if (std::begin (_IDs), std::end (_IDs), [&] (const std::pair<FbxUInt64, utility::string_t> &pair) {
+	auto findResult =std::find_if (std::begin (_IDs), std::end (_IDs), [&] (const std::pair<FbxUInt64, std::string> &pair) {
 		return (pair.second == id) ;
 	}) ;
 	return (findResult != std::end (_IDs)) ;
 }
 
-utility::string_t gltfWriter::nodeId (FbxNode *pNode, bool bNodeAttribute /*=false*/, bool bRecord /*=false*/) {
+std::string gltfWriter::nodeId (FbxNode *pNode, bool bNodeAttribute /*=false*/, bool bRecord /*=false*/) {
 	FbxUInt64 id =bNodeAttribute && pNode->GetNodeAttribute () != nullptr ? pNode->GetNodeAttribute ()->GetUniqueID () : pNode->GetUniqueID () ;
 	if ( isKnownId (id) )
 		return (_IDs [id]) ;
-	utility::string_t name =utility::conversions::to_string_t (
-		bNodeAttribute && pNode->GetNodeAttribute () != nullptr ? pNode->GetNodeAttribute ()->GetName () : pNode->GetName ()
-	) ;
-	if ( name == U("") )
-		name =utility::conversions::to_string_t (pNode->GetTypeName ()) ;
+	std::string name = bNodeAttribute && pNode->GetNodeAttribute () != nullptr ? pNode->GetNodeAttribute ()->GetName () : pNode->GetName ();
+	if ( name == ("") )
+		name =(pNode->GetTypeName ()) ;
 	//if ( isKnownId (name) ) // Comment if it should be consistent?
-		name +=U("_") + utility::conversions::to_string_t ((int)id) ;
+	name +=("_") + std::to_string((int)id) ;
 	if ( bRecord )
 		recordId (id, name) ;
 	return (name) ;
 }
 
-utility::string_t gltfWriter::registerName (utility::string_t name) {
+std::string gltfWriter::registerName (std::string name) {
 	if ( !isNameRegistered (name) )
 		_registeredNames.push_back (name) ;
 	return (name) ;
 }
 
-bool gltfWriter::isNameRegistered (utility::string_t id) {
+bool gltfWriter::isNameRegistered (std::string id) {
 	return (std::find (_registeredNames.begin (), _registeredNames.end (), id) != _registeredNames.end ()) ;
 }
 
-utility::string_t gltfWriter::createUniqueName (utility::string_t type, FbxUInt64 id) {
+std::string gltfWriter::createUniqueName (std::string type, FbxUInt64 id) {
 	for ( ;; id++ ) {
-		utility::string_t buffer =utility::conversions::to_string_t ((int)id) ;
-		utility::string_t uid (type) ;
-		uid +=U("_") + buffer ;
+		std::string buffer =utility::conversions::to_string_t ((int)id) ;
+		std::string uid (type) ;
+		uid +=("_") + buffer ;
 
 		if ( !isNameRegistered (uid) )
 			return (registerName (uid)) ;
 	}
 	_ASSERTE (false) ;
-	return (U("error")) ;
+	return (("error")) ;
 }
 
 //-----------------------------------------------------------------------------
-web::json::value gltfWriter::WriteSceneNodeRecursive (FbxNode *pNode, FbxPose *pPose /*=nullptr*/, bool bRoot /*=false*/) {
+Json::Value gltfWriter::WriteSceneNodeRecursive (FbxNode *pNode, FbxPose *pPose /*=nullptr*/, bool bRoot /*=false*/) {
 	//if ( !WriteSceneNode (pNode, pPose) )
 	//	//return (GetStatus ().SetCode (FbxStatus::eFailure, "Could not export node " + pNode->GetName () + "!"), false) ;
 	//	return (false) ;
 #ifdef _DEBUG_VERBOSE
-	utility::string_t name =utility::conversions::to_string_t (pNode->GetNameOnly ().Buffer ()) ;
-	_path.push_back (name) ;
+	std::string name =(pNode->GetNameOnly ().Buffer ()) ;
+	//_path.push_back (name) ;
 #endif
 
-	web::json::value node =WriteSceneNode (pNode, pPose) ;
-	utility::string_t nodeName, meshName ;
-	if ( !node.is_null () ) {
-		nodeName =GetJsonFirstKey (node [U("nodes")]) ;
-		if (   !bRoot && node [U("meshes")].size ()
-			//&& node [U("nodes")] [nodeName] [U("children")].size () == 0
+	Json::Value node =WriteSceneNode (pNode, pPose) ;
+	std::string nodeName, meshName ;
+	if ( !node.isNull () ) {
+		nodeName =GetJsonFirstKey (node [("nodes")]) ;
+		static Json::Value sIdentity4Mat( Json::arrayValue ) ;
+		static bool sIdentity4MatInitialized = false;
+		if( ! sIdentity4MatInitialized ) {
+			std::array<double, 16> identity{ 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1., 0., 0., 0., 0., 1. };
+			auto i{0};
+			for( auto val : identity )
+				sIdentity4Mat[i++] = val;
+			sIdentity4MatInitialized = true;
+		}
+		auto &mat = node [("nodes")] [nodeName] [("matrix")];
+		if (   !bRoot && node [("meshes")].size ()
+			//&& node [("nodes")] [nodeName] [("children")].size () == 0
 			&& pNode->GetChildCount () == 0
-			&& node [U("nodes")] [nodeName] [U("matrix")].serialize () == IOglTF::Identity4.serialize ()
+			&& sIdentity4Mat == mat
 		) {
-		//	meshName =GetJsonFirstKey (node [U("meshes")]) ;
-			node [U("nodes")] =web::json::value::object () ;
+		//	meshName =GetJsonFirstKey (node [("meshes")]) ;
+			node [("nodes")]  ;
 		}
 		MergeJsonObjects (_json, node) ;
 		if ( bRoot ) {
-			utility::string_t szName (utility::conversions::to_string_t (pNode->GetScene ()->GetName ())) ;
-			size_t pos =_json [U("scenes")] [szName] [U("nodes")].size () ;
-			_json [U("scenes")] [szName] [U("nodes")] [pos] =web::json::value::string (nodeName) ;
+			std::string szName ((pNode->GetScene ()->GetName ())) ;
+			uint32_t pos =_json [("scenes")] [szName] [("nodes")].size () ;
+			_json [("scenes")] [szName] [("nodes")] [pos] =(nodeName) ;
 		}
 	}
 #ifdef _DEBUG_VERBOSE
 	//else {
-	//	ucout << U(" !!! Null returned ( ") << name << U(" ) - ") ;
-	//	for ( utility::string_t st : _path )
-	//		ucout << U(" << ") << st  ;
-	//	ucout << std::endl ;
-	//	return (web::json::value::null ()) ;
+	//	std::cout << (" !!! Null returned ( ") << name << (" ) - ") ;
+	//	for ( std::string st : _path )
+	//		std::cout << (" << ") << st  ;
+	//	std::cout << std::endl ;
+	//	return (Json::Value::null ()) ;
 	//}
 #endif
 
 	FbxNodeAttribute::EType enodeType =nodeType (pNode) ;
 	for ( int i =0; i < pNode->GetChildCount () ; i++ ) {
-		web::json::value child =WriteSceneNodeRecursive (pNode->GetChild (i), pPose, bRoot && enodeType == FbxNodeAttribute::eUnknown) ;
-		if ( !child.is_null () && !node.is_null () ) {
-			utility::string_t key (U("nodes")), key2 (U("children")) ;
-			if (   !child.is_null () && child [U("nodes")].size () == 0
-				&& child [U("meshes")].size () != 0
+		Json::Value child =WriteSceneNodeRecursive (pNode->GetChild (i), pPose, bRoot && enodeType == FbxNodeAttribute::eUnknown) ;
+		if ( !child.isNull () && !node.isNull () ) {
+			std::string key (("nodes")), key2 (("children")) ;
+			if (   !child.isNull () && child [("nodes")].size () == 0
+				&& child [("meshes")].size () != 0
 			)
-				key =key2 =U("meshes") ;
-			utility::string_t childName (GetJsonFirstKey (child [key])) ;
-			size_t pos =_json [U("nodes")] [nodeName] [key2].size () ;
+				key =key2 =("meshes") ;
+			std::string childName (GetJsonFirstKey (child [key])) ;
+			uint32_t pos =_json [("nodes")] [nodeName] [key2].size () ;
 
 			//if ( std::find (
-			//		_json [U("nodes")] [nodeName] [key2].as_array ().begin (),
-			//		_json [U("nodes")] [nodeName] [key2].as_array ().end (),
-			//		web::json::value::string (childName)
-			//	) != _json [U("nodes")] [nodeName] [key2].as_array ().end ()
+			//		_json [("nodes")] [nodeName] [key2].as_array ().begin (),
+			//		_json [("nodes")] [nodeName] [key2].as_array ().end (),
+			//		(childName)
+			//	) != _json [("nodes")] [nodeName] [key2].as_array ().end ()
 			//)
-			//	ucout << U(" yes ") << std::endl ;
-			_json [U("nodes")] [nodeName] [key2] [pos] =web::json::value::string (childName) ;
+			//	std::cout << (" yes ") << std::endl ;
+			_json [("nodes")] [nodeName] [key2] [pos] =(childName) ;
 
 
 		}
 	}
 
 #ifdef _DEBUG_VERBOSE
-	_path.pop_back () ;
+	//_path.pop_back () ;
 #endif
 	return (node) ;
 }
 
-web::json::value gltfWriter::WriteSceneNode (FbxNode *pNode, FbxPose *pPose) {
+Json::Value gltfWriter::WriteSceneNode (FbxNode *pNode, FbxPose *pPose) {
 
-	//utility::string_t id =nodeId (pNode) ; 
-	//if ( _json [U("nodes")].has_field (id) ) {
+	//std::string id =nodeId (pNode) ; 
+	//if ( _json [("nodes")].isMember (id) ) {
 	//	// This node was already exported, return only its name
-	//	return (web::json::value::null ()) ;
+	//	return (Json::Value::null ()) ;
 	//}
 
 	FbxNodeAttribute::EType enodeType =nodeType (pNode) ;
@@ -482,40 +503,40 @@ web::json::value gltfWriter::WriteSceneNode (FbxNode *pNode, FbxPose *pPose) {
 		//if (   FbxString (pNode->GetName ()) != FbxString ("RootNode")
 		//	&& pNodeAttribute != nullptr
 		//)
-			ucout << U("Warning: (") << utility::conversions::to_string_t (pNode->GetTypeName ())
-				  << U(" - ") << (int)enodeType
-				  << U(") ") << utility::conversions::to_string_t (pNode->GetName ())
-				  << U(" not exported!")
+			std::cout << ("Warning: (") << (pNode->GetTypeName ())
+				  << (" - ") << (int)enodeType
+				  << (") ") <<  (pNode->GetName ())
+				  << (" not exported!")
 				  << std::endl ;
-		return (web::json::value::null ()) ;
+		return (Json::Value( Json::nullValue )) ;
 	}
 
 	//FbxProperty cid =pNode->FindProperty ("COLLADA_ID") ;
 	//FbxString sid =cid.IsValid () ? cid.Get<FbxString> () : FbxString ("") ;
-	//utility::string_t ff =utility::conversions::to_string_t (sid.Buffer ()) ;
+	//std::string ff =utility::conversions::to_string_t (sid.Buffer ()) ;
 
-	//utility::string_t id =nodeId (pNode) ;
+	//std::string id =nodeId (pNode) ;
 	//if ( isIdRegistered (id) ) {
-	////	ucout << id << U(" ( ") << ff << U(" ) x") << std::endl ;
-	//	return (web::json::value::null ()) ;
+	////	std::cout << id << (" ( ") << ff << (" ) x") << std::endl ;
+	//	return (Json::Value::null ()) ;
 	//}
-	////ucout << id << U(" ( ") << ff << U(" ) ") << std::endl ;
+	////std::cout << id << (" ( ") << ff << (" ) ") << std::endl ;
 
 #ifdef _DEBUG_VERBOSE
-	//for ( utility::string_t st : _path )
-	//	ucout << U(" << ") << st  ;
-	//ucout << std::endl ;
+	//for ( std::string st : _path )
+	//	std::cout << (" << ") << st  ;
+	//std::cout << std::endl ;
 #endif
 	ExporterRouteFct fct =(*(_routes.find (enodeType))).second ;
-	web::json::value val =(this->*fct) (pNode) ;
-//	web::json::value val =WriteNull (pNode) ;
+	Json::Value val =(this->*fct) (pNode) ;
+//	Json::Value val =WriteNull (pNode) ;
 
 	//for ( auto iter =val.as_object ().cbegin () ; iter != val.as_object ().cend () ; ++iter ) {
-	//	//const utility::string_t &str =iter->first ;
-	//	const web::json::value &v =iter->second ;
+	//	//const std::string &str =iter->first ;
+	//	const Json::Value &v =iter->second ;
 	//	for ( auto iter2 =v.as_object ().cbegin () ; iter2 != v.as_object ().cend () ; ++iter2 ) {
-	//		const utility::string_t &id =iter2->first ;
-	//		//ucout << id << std::endl ;
+	//		const std::string &id =iter2->first ;
+	//		//std::cout << id << std::endl ;
 	//		registerId (id) ;
 	//	}
 	//}
@@ -528,14 +549,14 @@ FbxNodeAttribute::EType gltfWriter::nodeType (FbxNode *pNode) {
 	FbxNodeAttribute::EType nodeType =pNodeAttribute ? pNodeAttribute->GetAttributeType () : FbxNodeAttribute::eUnknown ;
 	// Non paired node
 	if ( pNodeAttribute == nullptr ) {
-		utility::string_t szType =utility::conversions::to_string_t (pNode->GetTypeName ()) ;
-		if ( szType == U("Null") )
+		std::string szType = (pNode->GetTypeName ()) ;
+		if ( szType == ("Null") )
 			nodeType =FbxNodeAttribute::eNull ;
 	}
 	return (nodeType) ;
 }
 
-web::json::value gltfWriter::GetTransform (FbxNode *pNode) {
+Json::Value gltfWriter::GetTransform (FbxNode *pNode) {
 	// Export the node's default transforms
 
 	// If the mesh is a skin binded to a skeleton, the bind pose will include its transformations.
@@ -569,52 +590,55 @@ web::json::value gltfWriter::GetTransform (FbxNode *pNode) {
 	}
 
 	FbxAMatrix::kDouble44 &r =thisLocal.Double44 () ;
-	std::vector<web::json::value> ar ;
+	Json::Value ar( Json::arrayValue ) ;
+	auto k{0};
 	for ( int i =0 ; i < 4 ; i++ )
 		for ( int j =0 ; j < 4 ; j++ )
-			ar.push_back (web::json::value::number (r [i] [j])) ;
-	return (web::json::value::array (ar)) ;
+			ar[k++] = ((r [i] [j])) ;
+	return (ar) ;
 }
 
 //-----------------------------------------------------------------------------
-web::json::value gltfWriter::WriteNode (FbxNode *pNode) {
-	web::json::value nodeDef =web::json::value::object () ;
+Json::Value gltfWriter::WriteNode (FbxNode *pNode) {
+	Json::Value nodeDef  ;
 
-	utility::string_t id =nodeId (pNode, false, true) ;
-	nodeDef [U("name")] =web::json::value::string (id) ;
+	std::string id =nodeId (pNode, false, true) ;
+	nodeDef [("name")] =(id) ;
 
-	utility::string_t szType =utility::conversions::to_string_t (pNode->GetTypeName ()) ;
+	std::string szType =(pNode->GetTypeName ()) ;
 	std::transform (szType.begin (), szType.end (), szType.begin (), ::tolower) ;
 	
 	// A floating-point 4x4 transformation matrix stored in column-major order.
 	// A node will have either a matrix property defined or any combination of rotation, scale, and translation properties defined.
-	web::json::value nodeTransform =GetTransform (pNode) ;
+	Json::Value nodeTransform =GetTransform (pNode) ;
 	//if ( !nodeTransform.is_boolean () || nodeTransform != true )
-		nodeDef [U("matrix")] =nodeTransform ;
-	//nodeDef [U("rotation")] =web::json::value::array ({{ 1., 0., 0., 0. }}) ;
-	//nodeDef [U("scale")] =web::json::value::array ({{ 1., 1., 1. }}) ;
-	//nodeDef [U("translation")] =web::json::value::array ({{ 0., 0., 0. }}) ;
+		nodeDef [("matrix")] =nodeTransform ;
+	//nodeDef [("rotation")] =Json::Value::array ({{ 1., 0., 0., 0. }}) ;
+	//nodeDef [("scale")] =Json::Value::array ({{ 1., 1., 1. }}) ;
+	//nodeDef [("translation")] =Json::Value::array ({{ 0., 0., 0. }}) ;
 
-	nodeDef [U("children")] =web::json::value::array () ;
-	//nodeDef [U("instanceSkin")] = ;
+	nodeDef [("children")] =Json::Value( Json::arrayValue ) ;
+	//nodeDef [("instanceSkin")] = ;
 
 	const FbxNodeAttribute *nodeAttribute =pNode->GetNodeAttribute () ;
 	if ( nodeAttribute && nodeAttribute->GetAttributeType () == FbxNodeAttribute::eSkeleton ) {
 		// The only difference between a node containing a nullptr and one containing a SKELETON is the property type JOINT.
-		nodeDef [U("jointName")] =web::json::value::string (U("JOINT")) ;
+		nodeDef [("jointName")] =(("JOINT")) ;
 	}
 	
-	//if ( szType == U("mesh") )
+	//if ( szType == ("mesh") )
 	if ( pNode->GetNodeAttribute () && pNode->GetNodeAttribute ()->GetAttributeType () == FbxNodeAttribute::eMesh )
-		nodeDef [U("meshes")] =web::json::value::array ({{ web::json::value (nodeId (pNode, true)) }}) ;
-	//if ( szType == U("camera") || szType == U("light") )
+		nodeDef [("meshes")][0] = (nodeId (pNode, true)) ;
+	//if ( szType == ("camera") || szType == ("light") )
 	if (   pNode->GetNodeAttribute ()
 		&& (   pNode->GetNodeAttribute ()->GetAttributeType () == FbxNodeAttribute::eCamera
 			|| pNode->GetNodeAttribute ()->GetAttributeType () == FbxNodeAttribute::eLight)
 	)
-		nodeDef [szType] =web::json::value::string (nodeId (pNode, true)) ; //nodeDef [U("camera")] nodeDef [U("light")]
+		nodeDef [szType] =(nodeId (pNode, true)) ; //nodeDef [("camera")] nodeDef [("light")]
 
-	return (web::json::value::object ({{ id, nodeDef }})) ;
+	Json::Value ret;
+	ret[id] = nodeDef;
+	return (ret) ;
 }
 
 

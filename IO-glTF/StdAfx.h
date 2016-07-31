@@ -49,19 +49,14 @@
 #include <limits>
 #include <fstream>
 
-// C++ REST SDK (codename "Casablanca")
-// https://casablanca.codeplex.com/
-#include <cpprest/filestream.h>
-#include <cpprest/json.h>					// JSON library
-#include <cpprest/uri.h>                    // URI library
-typedef web::json::value JsonValue ;
-typedef web::json::value::value_type JsonValueType ;
+#include "jsoncpp/json-forwards.h"
+typedef Json::Value JsonValue ;
 
 #include <regex>
-typedef std::basic_regex<utility::char_t> uregex ;
-//typedef std::match_results<utility::char_t *> umatch ;
-typedef std::match_results<utility::string_t::const_iterator> umatch ;
-//typedef std::match_results<const utility::char_t *> umatch ;
+typedef std::basic_regex<char> uregex ;
+//typedef std::match_results<char *> umatch ;
+typedef std::match_results<std::string::const_iterator> umatch ;
+//typedef std::match_results<const char *> umatch ;
 
 // C++ FBX SDK
 // http://www.autodeks.com/developfbx
