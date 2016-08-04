@@ -20,7 +20,6 @@ target_link_libraries (
 	IO-glTF
 	jsoncpp
 	${FBX_SDK_LIBRARY}
-	${Boost_LIBRARIES} ${Boost_FRAMEWORK}
 )
 
 # Support Files
