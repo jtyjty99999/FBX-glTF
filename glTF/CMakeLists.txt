@@ -21,5 +21,6 @@ target_link_libraries (
 	glTF
 	jsoncpp
 	${FBX_SDK_LIBRARY}
+	dl
 )
 
